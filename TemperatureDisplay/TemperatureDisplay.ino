@@ -39,7 +39,7 @@ float valueToDisplay = 0;
 
 AsyncTemperatureSensor sensor(temperatureSensorPin);
 
-unsigned long lastIncrement = 0;
+unsigned long lastUpdate = 0;
 
 int digitValues[] = 
 {
@@ -83,9 +83,6 @@ void setup()
   writeValue(0, valueToDisplay, false);
 }
 
-bool toggle = false;
-unsigned long lastToggle = 0;
-
 void loop()
 {
   float place = calculatePlace(3 - segmentIndex, decimals);
@@ -99,10 +96,10 @@ void loop()
   valueToDisplay = temperatureInF;
 
   unsigned long now = millis();
-  if (now > lastIncrement + 100)
+  if (now > lastUpdate + 100)
   {
     sensor.update();
-    lastIncrement = now;
+    lastUpdate = now;
   }
 
   digitalWrite(ledPin, (now % 200 == 0) ? HIGH : LOW);
@@ -120,6 +117,7 @@ float calculatePlace(int segmentIndex, int decimals)
     case 1: return 10;
     case 2: return 100;
     case 3: return 1000;
+    default: assert(false);
   }
 }
 
