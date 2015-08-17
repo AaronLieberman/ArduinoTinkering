@@ -7,12 +7,12 @@ AsyncTemperatureSensor::AsyncTemperatureSensor(int temperatureSensorPin) :
 {
 }
 
-void AsyncTemperatureSensor::start()
+void AsyncTemperatureSensor::Start()
 {
   _sensor.begin();
 }
 
-void AsyncTemperatureSensor::update()
+void AsyncTemperatureSensor::Update()
 {
   if (!_sensorAcquired && _sensor.getAddress(_deviceAddress, 0))
   {
@@ -43,7 +43,7 @@ void AsyncTemperatureSensor::update()
   }
 }
 
-float AsyncTemperatureSensor::getTempF()
+float AsyncTemperatureSensor::GetTempF()
 {
   return _temperatureInF;
 }

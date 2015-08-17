@@ -15,7 +15,7 @@ void ShiftRegister::initialize()
   pinMode(_latchPin, OUTPUT);
 }
 
-void ShiftRegister::write(int desiredPin, boolean desiredState)
+void ShiftRegister::write(int desiredPin, boolean desiredState, bool activateLatch)
 {
   bitWrite(shiftRegisterData, desiredPin, desiredState);
   

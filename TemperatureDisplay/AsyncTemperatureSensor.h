@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -19,10 +20,10 @@ public:
 
   AsyncTemperatureSensor(int temperatureSensorPin);
   
-  void start();
-  void update();
+  void Start();
+  void Update();
   
-  float getTempF();
+  float GetTempF();
   
 };
 

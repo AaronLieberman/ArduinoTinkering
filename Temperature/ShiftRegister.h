@@ -14,7 +14,7 @@ public:
   ShiftRegister(int dataPin, int clockPin, int latchPin);
 
   void initialize();
-  void write(int desiredPin, boolean desiredState);
+  void write(int desiredPin, boolean desiredState, bool activateLatch);
 
 };
 
