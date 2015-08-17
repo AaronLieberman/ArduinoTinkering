@@ -13,12 +13,12 @@ private:
   DeviceAddress _deviceAddress;
   bool _sensorAcquired = false;
   float _temperatureInF = 0;
-  int _lastRequestMillis = 0;
+  unsigned long _lastRequestMillis = 0;
   bool _failure = false;
 
 public:
 
-  AsyncTemperatureSensor(int temperatureSensorPin);
+  AsyncTemperatureSensor(byte temperatureSensorPin);
   
   void Start();
   void Update();

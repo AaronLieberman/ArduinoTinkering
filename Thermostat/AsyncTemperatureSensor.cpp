@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "AsyncTemperatureSensor.h"
 
-AsyncTemperatureSensor::AsyncTemperatureSensor(int temperatureSensorPin) :
+AsyncTemperatureSensor::AsyncTemperatureSensor(byte temperatureSensorPin) :
     _oneWire(temperatureSensorPin),
     _sensor(&_oneWire)
 {
@@ -14,10 +14,9 @@ void AsyncTemperatureSensor::Start()
 
 void AsyncTemperatureSensor::Update()
 {
+  // aquire sensor
   if (!_sensorAcquired && _sensor.getAddress(_deviceAddress, 0))
   {
-    Serial.println("Acquired sensor.");
-    
     _sensor.setWaitForConversion(false);
     _sensor.setResolution(12);
     
@@ -27,16 +26,15 @@ void AsyncTemperatureSensor::Update()
       _lastRequestMillis = millis();
     }
   }
-  
-  if (_sensorAcquired && millis() - _lastRequestMillis < 750 && _sensor.isConversionAvailable(_deviceAddress))
-  {
-     _temperatureInF = _sensor.getTempF(_deviceAddress);
 
-    if (_sensor.requestTemperaturesByAddress(_deviceAddress))
-    {
-      _lastRequestMillis = millis();
-    }
-    else
+  // get temperature
+  // 750 millis is how long it takes to retrieve the temperature from the sensor. Let's give it room and call it 1000ms
+  if (_sensorAcquired && (millis() - _lastRequestMillis > 1000))
+  {
+    _temperatureInF = _sensor.getTempF(_deviceAddress);
+    _lastRequestMillis = millis();
+
+    if (!_sensor.requestTemperaturesByAddress(_deviceAddress))
     {
       _sensorAcquired = false;
     }

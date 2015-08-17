@@ -26,8 +26,8 @@ void LedDisplay::SetSegmentMapping(byte top, byte middle, byte bottomRight, byte
   _digitValues[5] = top | topLeft | middle | bottomRight | bottom;
   _digitValues[6] = top | topLeft | middle | bottomLeft | bottomRight | bottom;
   _digitValues[7] = top | topRight | bottomRight;
-  //_digitValues[8] = top | topLeft | topRight | middle | bottomLeft | bottomRight | bottom;
-  //_digitValues[9] = top | topLeft | topRight | middle | bottomRight | bottom;
+  _digitValues[8] = top | topLeft | topRight | middle | bottomLeft | bottomRight | bottom;
+  _digitValues[9] = top | topLeft | topRight | middle | bottomRight | bottom;
   _segDot = dot;
 }
 
