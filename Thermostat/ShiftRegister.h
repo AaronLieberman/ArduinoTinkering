@@ -15,7 +15,7 @@ public:
   ShiftRegister(byte clockPin, byte latchPin, byte dataPin);
 
   void Initialize();
-  void Write(byte desiredState, bool a);
+  void Write(byte desiredState, bool latch);
 
 };
 

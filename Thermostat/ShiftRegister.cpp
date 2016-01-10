@@ -21,12 +21,14 @@ void ShiftRegister::Initialize()
   Write(0, true);
 }
 
-void ShiftRegister::Write(byte desiredState, bool a)
+void ShiftRegister::Write(byte desiredState, bool latch)
 {
   shiftOut(_dataPin, _clockPin, MSBFIRST, desiredState);
 
-if (!a) return;
-  digitalWrite(_latchPin, HIGH);
-  digitalWrite(_latchPin, LOW);
+  if (latch)
+  {
+    digitalWrite(_latchPin, HIGH);
+    digitalWrite(_latchPin, LOW);
+  }
 }
 

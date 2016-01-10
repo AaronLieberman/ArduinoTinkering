@@ -40,7 +40,7 @@ void setup()
   ledDisplay.Start();
 }
 
-SIGNAL(TIMER0_COMPA_vect) 
+SIGNAL(TIMER0_COMPA_vect)
 {
   ledDisplay.SetValue(temperatureInF);
   ledDisplay.Update();
