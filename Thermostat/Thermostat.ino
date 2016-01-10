@@ -19,6 +19,8 @@ const byte temperatureSensorPin = 8;
 const int lowTemp = 138;
 const int highTemp = 142;
 
+volatile float temperatureInF;
+
 LedDisplay ledDisplay(segmentShiftRegisterClockPin, registerClockPin, whichSegmentDataPin,digitShiftRegisterClockPin, registerClockPin, whichDigitDataPin);
 AsyncTemperatureSensor sensor(temperatureSensorPin);
 
@@ -31,17 +33,23 @@ void setup()
   pinMode(heatOnPin, OUTPUT);
   pinMode(deviceLedPin, OUTPUT);
 
+  OCR0A = 0xAF;
+  TIMSK0 |= _BV(OCIE0A);
+
   sensor.Start();
   ledDisplay.Start();
+}
+
+SIGNAL(TIMER0_COMPA_vect) 
+{
+  ledDisplay.SetValue(temperatureInF);
+  ledDisplay.Update();
 }
 
 void loop()
 {
   sensor.Update();
-
-  float temperatureInF = sensor.GetTempF();
-  ledDisplay.SetValue(temperatureInF);
-  ledDisplay.Update();
+  temperatureInF = sensor.GetTempF();
 
   if (temperatureInF < lowTemp)
   {
