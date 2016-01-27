@@ -14,7 +14,7 @@
 #define PIN            6
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS      5
+#define NUMPIXELS      7
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
@@ -34,6 +34,9 @@ void setup() {
 }
 
 float hue = 0;
+const float hueOffset = 0.01f;
+float phase = 0;
+const float phaseOffset = 1.0f / 167;
 
 Color3F GenerateHue(float hue)
 {
@@ -58,17 +61,16 @@ void loop()
   for(int i=0; i < NUMPIXELS; i++)
   {
     Color3F c = GenerateHue(hue + ((float)i) / NUMPIXELS);
-    pixels.setPixelColor(i, pixels.Color(c.R, c.G, c.B));
+
+    float brightness = cos((phase + 1.0f * i / NUMPIXELS) * 2 * M_PI) / 2 + 0.5f;
+    pixels.setPixelColor(i, pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
 
     pixels.show(); // This sends the updated pixel color to the hardware.
 
     delay(delayval); // Delay for a period of time (in milliseconds).
   }
 
-  hue += 0.01f;
-  if (hue >= 1)
-  {
-    hue = 0;
-  }
+  hue = hue + hueOffset >= 1 ? 0 : hue + hueOffset;
+  phase = phase + phaseOffset >= 1 ? 0 : phase + phaseOffset;
 }
 
