@@ -21,7 +21,7 @@ const int highTemp = 142;
 
 volatile float temperatureInF;
 
-LedDisplay ledDisplay(segmentShiftRegisterClockPin, registerClockPin, whichSegmentDataPin,digitShiftRegisterClockPin, registerClockPin, whichDigitDataPin);
+LedDisplay ledDisplay(segmentShiftRegisterClockPin, registerClockPin, whichSegmentDataPin, digitShiftRegisterClockPin, registerClockPin, whichDigitDataPin);
 AsyncTemperatureSensor sensor(temperatureSensorPin);
 
 void setup()
