@@ -6,37 +6,50 @@
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
+#include <stdlib.h>
 
 #include "Color3F.h"
 
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
-#define PIN            6
+const int _pixelPin = 6;
+const int _micPin = 5;
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS      7
+const int _numPixels = 7;
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel _pixels = Adafruit_NeoPixel(_numPixels, _pixelPin, NEO_GRB + NEO_KHZ800);
 
-int delayval = 1;
+const int _sampleWindow = 50;
+unsigned long _sampleStartMillis = 0;
+unsigned int _signalMax = 0;
+unsigned int _signalMin = 0;
+float _currentSignal;
 
-void setup() {
+void setup()
+{
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
 #if defined (__AVR_ATtiny85__)
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
 #endif
   // End of trinket special code
 
-  pixels.begin(); // This initializes the NeoPixel library.
+  // This is only needed on 5V Arduinos (Uno, Leonardo, etc.). Connect 3.3V to mic AND TO AREF ON ARDUINO and enable this
+  // line.  Audio samples are 'cleaner' at 3.3V. COMMENT OUT THIS LINE FOR 3.3V ARDUINOS (FLORA, ETC.):
+  analogReference(EXTERNAL);
+
+  Serial.begin(9600);
+
+  _pixels.begin(); // This initializes the NeoPixel library.
 }
 
-float hue = 0;
-const float hueOffset = 0.01f;
-float phase = 0;
-const float phaseOffset = 1.0f / 167;
+float _hue = 0;
+const float _hueOffset = 0.01f;
+float _phase = 0;
+const float _phaseOffset = 1.0f / 167;
 
 Color3F GenerateHue(float hue)
 {
@@ -54,23 +67,69 @@ Color3F GenerateHue(float hue)
   return ret;
 }
 
+float GetSample()
+{
+  long now = millis();
+
+  if (now - _sampleStartMillis > _sampleWindow)
+  {
+    unsigned int peakToPeak = _signalMax - _signalMin; // max - min = peak-peak amplitude
+    _currentSignal = (double)peakToPeak / 1024;
+
+    char buf[128];
+    char tempSignalString[20];
+    dtostrf(_currentSignal, 6, 4, tempSignalString);
+    sprintf(buf, "%s %d %d", tempSignalString, _signalMin, _signalMax);
+    Serial.println(buf);
+
+    _sampleStartMillis = now;
+    _signalMin = 1024;
+    _signalMax = 0;
+  }
+  else
+  {
+     unsigned int sample = analogRead(0);
+     
+     if (sample < 1024)  // toss out spurious readings
+     {
+        if (sample > _signalMax)
+        {
+           _signalMax = sample;  // save just the max levels
+        }
+        else if (sample < _signalMin)
+        {
+           _signalMin = sample;  // save just the min levels
+        }
+     }
+  }
+
+  return _currentSignal;
+}
+
 void loop()
 {
   // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
 
-  for(int i=0; i < NUMPIXELS; i++)
+  float sample = GetSample();
+
+  for(int i = 0; i < _numPixels; i++)
   {
-    Color3F c = GenerateHue(hue + ((float)i) / NUMPIXELS);
+    //Color3F c = GenerateHue(_hue + ((float)i) / _numPixels);
+    Color3F c = Color3F(255, 255, 255);
 
-    float brightness = cos((phase + 1.0f * i / NUMPIXELS) * 2 * M_PI) / 2 + 0.5f;
-    pixels.setPixelColor(i, pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
+//TODO Log scale
+//TODO gain
+//TODO dithering
 
-    pixels.show(); // This sends the updated pixel color to the hardware.
+    float brightness = ((float)i / _numPixels) < sample;
+    _pixels.setPixelColor(i, _pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
 
-    delay(delayval); // Delay for a period of time (in milliseconds).
+    _pixels.show();
+
+    delay(1);
   }
 
-  hue = hue + hueOffset >= 1 ? 0 : hue + hueOffset;
-  phase = phase + phaseOffset >= 1 ? 0 : phase + phaseOffset;
+  _hue = _hue + _hueOffset >= 1 ? 0 : _hue + _hueOffset;
+  _phase = _phase + _phaseOffset >= 1 ? 0 : _phase + _phaseOffset;
 }
 
