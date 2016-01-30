@@ -111,6 +111,9 @@ void loop()
   // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
 
   float sample = GetSample();
+  //sample = (float)analogRead(1) / 1023;
+  //Serial.println(sample);
+  float sampleDistance = 1.f / _numPixels;
 
   for(int i = 0; i < _numPixels; i++)
   {
@@ -119,9 +122,8 @@ void loop()
 
 //TODO Log scale
 //TODO gain
-//TODO dithering
 
-    float brightness = ((float)i / _numPixels) < sample;
+    float brightness = min(max(sample - ((float)i / _numPixels), 0) * _numPixels, 1);
     _pixels.setPixelColor(i, _pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
 
     _pixels.show();
