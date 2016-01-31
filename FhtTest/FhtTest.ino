@@ -19,36 +19,39 @@ visualizing the data.
 
 #define PIN            6
 #define NUMPIXELS      7
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel _pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+byte _pixelBins[NUMPIXELS];
 
 void setup()
 {
   const int analogReferenceMode = EXTERNAL;
   const int audioPin = 0;
 
-  pixels.begin(); // This initializes the NeoPixel library.
-  
   Serial.begin(9600); // use the serial port
+
+  _pixels.begin(); // This initializes the NeoPixel library.
+  
   //TIMSK0 = 0; // turn off timer0 for lower jitter
   ADCSRA = 0xe5; // set the adc to free running mode
   ADMUX = (analogReferenceMode << 6) | (audioPin & 0x07);
   DIDR0 = 0x01; // turn off the digital input for adc0
+
+  memset(_pixelBins, 0, sizeof(_pixelBins));
 }
 
-void PrintData(int *data, int count)
+void PrintData(byte *data, int count)
 {
   static int lastPrint = 0;
   
-  if (millis() > lastPrint + 1000)
+  if (millis() > lastPrint + 100)
   {
     char buf[256];
     char *loc = buf;
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < NUMPIXELS; i++)
     {
-      sprintf(loc, "%d ", fht_log_out[i]);
+      sprintf(loc, "%d ", _pixelBins[i]);
       loc += strlen(loc);
-      //Serial.write(255); // send a start byte
-      //Serial.write(fht_log_out, FHT_N/2); // send out the data
     }
     
     lastPrint = millis();
@@ -59,29 +62,34 @@ void PrintData(int *data, int count)
 
 void ShowValues(byte *data, int count)
 {
+  byte _newBinValues[NUMPIXELS];
+  memset(_newBinValues, 0, NUMPIXELS);
+
+  for (int i = 0; i < count; i++)
+  {
+    int binIndex = (int)((float)i / count * NUMPIXELS);
+    _newBinValues[binIndex] += (float)data[i] * NUMPIXELS / count;
+  }
+
+  const float degrade = 0.7f;
+  
+  for (int i = 0; i < NUMPIXELS; i++)
+  {
+    _pixelBins[i] = _pixelBins[i] * degrade + _newBinValues[i] * (1.0f - degrade);
+  }
+  
   static int lastPrint = 0;
   
-  if (millis() > lastPrint + 0)
-  {
-    byte pixelBins[NUMPIXELS];
-    memset(pixelBins, 0, sizeof(pixelBins));
-
-    for(int i = 0; i < count; i++)
-    {
-      int binIndex = (int)((float)i / count * NUMPIXELS);
-      pixelBins[binIndex]++;
-    }
-    
-    for(int i = 0; i < count; i++)
+  if (millis() > lastPrint + 100)
+  {    
+    for (int i = 0; i < NUMPIXELS; i++)
     {
       Color3F c = Color3F(255, 255, 255);
-
-      byte dataPoint = data[i];
-      float brightness = (float)max(dataPoint - 50, 0) / 255;
-      pixels.setPixelColor(i, pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
+      float brightness = (float)_pixelBins[i] / 255;
+      _pixels.setPixelColor(i, _pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
     }
   
-    pixels.show();
+    _pixels.show();
   }
 }
 
@@ -109,8 +117,8 @@ void loop()
     fht_mag_log(); // take the output of the fht
     sei();
 
-    //PrintData(fht_input, FHT_N / 2);
-  
+    PrintData(fht_log_out, FHT_N / 2);
+
     ShowValues(fht_log_out, FHT_N / 2);
   }
 }
