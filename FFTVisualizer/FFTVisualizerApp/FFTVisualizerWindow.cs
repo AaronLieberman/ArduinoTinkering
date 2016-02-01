@@ -10,7 +10,6 @@ namespace FFTVisualizerApp
 {
 	public partial class FftVisualizerWindow : Form
 	{
-		readonly Timer _timer1 = new Timer { Interval = 1 };
 		Bitmap _cache;
 		Direct2DFactory _factory;
 		WindowRenderTarget _renderTarget;
@@ -18,19 +17,17 @@ namespace FFTVisualizerApp
 
 		public FftVisualizerWindow()
 		{
-			SetStyle(
-				ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.ResizeRedraw | ControlStyles.UserPaint,
-				true);
+			SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
 			InitializeComponent();
 			Load += MainWindow_Load;
 			Paint += MainWindow_Paint;
-			_timer1.Tick += timer1_Tick;
 		}
 
 		void MainWindow_Paint(object sender, PaintEventArgs e)
 		{
 			_renderTarget.BeginDraw();
 			_renderTarget.Clear(Color.FromKnown(Colors.Black, 1));
+
 			if (_cache != null)
 			{
 				_renderTarget.DrawBitmap(
@@ -39,6 +36,7 @@ namespace FFTVisualizerApp
 					1,
 					BitmapInterpolationMode.Linear);
 			}
+
 			_renderTarget.EndDraw();
 		}
 
@@ -57,29 +55,27 @@ namespace FFTVisualizerApp
 			_renderTarget = _factory.CreateWindowRenderTarget(this);
 			Resize += MainWindow_Resize;
 
-			_timer1.Start();
+			var timer = new Timer { Interval = 10 };
+			timer.Tick += (_, __) => { timer.Stop(); Redraw(); };
+			timer.Start();
 		}
 
 		void MainWindow_Resize(object sender, EventArgs e)
 		{
-			// ReSharper disable once UseNullPropagation
-			if (_renderTarget != null)
-			{
-				//if (this._cache != null)
-				//{
-				//    this._cache.Dispose();
-				//    this._cache = null;
-				//}
-				_renderTarget.Resize(new SizeU { Width = (uint)ClientSize.Width, Height = (uint)ClientSize.Height });
-				//timer1_Tick(null, EventArgs.Empty);
-			}
+			_cache?.Dispose();
+			_cache = null;
+
+			_renderTarget?.Resize(new SizeU { Width = (uint)ClientSize.Width, Height = (uint)ClientSize.Height });
+			Redraw();
 		}
 
-		void timer1_Tick(object sender, EventArgs e)
+		void Redraw()
 		{
-			_timer1.Enabled = false;
+			if (_renderTarget == null) return;
+
 			var rand = new Random();
 			_renderTarget.BeginDraw();
+
 			for (var index = 0; index < 20; ++index)
 			{
 				var color = Color.FromRGB((float)rand.NextDouble(), (float)rand.NextDouble(), (float)rand.NextDouble());
@@ -96,15 +92,18 @@ namespace FFTVisualizerApp
 							new PointF(rand.Next(0, ClientSize.Width) + patch, rand.Next(0, ClientSize.Height) + patch)));
 				}
 			}
+
 			_cache = _renderTarget.CreateBitmap(
 				new SizeU((uint)ClientSize.Width, (uint)ClientSize.Height),
 				IntPtr.Zero,
 				0,
 				new BitmapProperties(new PixelFormat(DxgiFormat.B8G8R8A8_UNORM, AlphaMode.Ignore), 96, 96));
+
 			_cache.CopyFromRenderTarget(
 				new PointU(0, 0),
 				_renderTarget,
 				new RectU(0, 0, (uint)ClientSize.Width, (uint)ClientSize.Height));
+
 			_renderTarget.EndDraw();
 		}
 	}
