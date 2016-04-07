@@ -29,6 +29,8 @@
 		private void InitializeComponent()
 		{
 			this.btnConnect = new System.Windows.Forms.Button();
+			this.pictArea = new System.Windows.Forms.PictureBox();
+			((System.ComponentModel.ISupportInitialize)(this.pictArea)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// btnConnect
@@ -41,17 +43,29 @@
 			this.btnConnect.UseVisualStyleBackColor = true;
 			this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
 			// 
+			// pictArea
+			// 
+			this.pictArea.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.pictArea.Location = new System.Drawing.Point(12, 41);
+			this.pictArea.Name = "pictArea";
+			this.pictArea.Size = new System.Drawing.Size(1105, 903);
+			this.pictArea.TabIndex = 1;
+			this.pictArea.TabStop = false;
+			// 
 			// FftVisualizerWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1129, 956);
+			this.Controls.Add(this.pictArea);
 			this.Controls.Add(this.btnConnect);
 			this.Name = "FftVisualizerWindow";
 			this.Text = "Form1";
 			this.Load += new System.EventHandler(this.MainWindow_Load);
-			this.Paint += new System.Windows.Forms.PaintEventHandler(this.MainWindow_Paint);
-			this.Resize += new System.EventHandler(this.MainWindow_Resize);
+			this.Paint += new System.Windows.Forms.PaintEventHandler(this.PictArea_Paint);
+			((System.ComponentModel.ISupportInitialize)(this.pictArea)).EndInit();
 			this.ResumeLayout(false);
 
 		}
@@ -59,6 +73,7 @@
 		#endregion
 
 		private System.Windows.Forms.Button btnConnect;
+		private System.Windows.Forms.PictureBox pictArea;
 	}
 }
 

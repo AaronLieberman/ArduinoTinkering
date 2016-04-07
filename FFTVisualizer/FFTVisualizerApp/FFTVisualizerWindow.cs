@@ -15,6 +15,8 @@ namespace FFTVisualizerApp
 {
 	public partial class FftVisualizerWindow : Form
 	{
+		const int _sampleCount = 128;
+
 		Bitmap _cache;
 		Direct2DFactory _factory;
 		WindowRenderTarget _renderTarget;
@@ -29,7 +31,8 @@ namespace FFTVisualizerApp
 			SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
 			InitializeComponent();
 			Load += MainWindow_Load;
-			Paint += MainWindow_Paint;
+
+			pictArea.Paint += PictArea_Paint;
 		}
 
 		protected override void OnClosed(EventArgs e)
@@ -39,16 +42,15 @@ namespace FFTVisualizerApp
 			base.OnClosed(e);
 		}
 
-		void MainWindow_Paint(object sender, PaintEventArgs e)
+		void PictArea_Paint(object sender, PaintEventArgs e)
 		{
 			_renderTarget.BeginDraw();
-			_renderTarget.Clear(Color.FromKnown(Colors.Black, 1));
 
 			if (_cache != null)
 			{
 				_renderTarget.DrawBitmap(
 					_cache,
-					new RectF(0, 0, ClientSize.Width, ClientSize.Height),
+					new RectF(0, 0, pictArea.Width, pictArea.Height),
 					1,
 					BitmapInterpolationMode.Linear);
 			}
@@ -59,15 +61,7 @@ namespace FFTVisualizerApp
 		void MainWindow_Load(object sender, EventArgs e)
 		{
 			_factory = Direct2DFactory.CreateFactory(FactoryType.SingleThreaded, DebugLevel.None);
-			var ssp = new StrokeStyleProperties(
-				LineCapStyle.Round,
-				LineCapStyle.Round,
-				LineCapStyle.Round,
-				LineJoin.Round,
-				10,
-				DashStyle.Solid,
-				0);
-			_renderTarget = _factory.CreateWindowRenderTarget(this);
+			_renderTarget = _factory.CreateWindowRenderTarget(pictArea);
 			Resize += MainWindow_Resize;
 
 			_frameTimer.Tick += (_, __) => Redraw();
@@ -78,8 +72,10 @@ namespace FFTVisualizerApp
 			_cache?.Dispose();
 			_cache = null;
 
-			_renderTarget?.Resize(new SizeU { Width = (uint)ClientSize.Width, Height = (uint)ClientSize.Height });
+			_renderTarget?.Resize(new SizeU { Width = (uint)pictArea.Width, Height = (uint)pictArea.Height });
+
 			Redraw();
+			Refresh();
 		}
 
 		void Redraw()
@@ -94,46 +90,51 @@ namespace FFTVisualizerApp
 				_averagedData = new byte[data.Length];
 			}
 
-			var degrade = 0.2f;
+			const float degrade = 1f;
 
 			for (var i = 0; i < data.Length; i++)
 			{
 				_averagedData[i] = (byte)(_averagedData[i] * (1.0f - degrade) + data[i] * degrade);
 			}
 
+			//for (var i = 0; i < data.Length / 4; i++)
+			//{
+			//	_averagedData[i * 4] = (byte)(_averagedData[i * 4] * (1.0f - degrade) + data[i * 4] * degrade);
+			//	_averagedData[i * 4 + 1] = _averagedData[i * 4];
+			//	_averagedData[i * 4 + 2] = _averagedData[i * 4];
+			//	_averagedData[i * 4 + 3] = _averagedData[i * 4];
+			//}
+
 			data = _averagedData;
 
-			var rand = new Random();
 			_renderTarget.BeginDraw();
 
-			var width = ClientSize.Width;
-			var height = ClientSize.Height;
+			var width = pictArea.Width;
+			var height = pictArea.Height;
 
-			var dataWidth = data.Length / 4;
+			var dataWidth = data.Length;
 
 			var blockWidth = width / dataWidth;
 			var blockHeight = height / 256;
 
-			using (var blackBrush = _renderTarget.CreateSolidColorBrush(Color.FromRGB(0, 0, 0)))
-			{
-				_renderTarget.FillRect(blackBrush, new RectF(new PointF(0, 0), new PointF(width, height)));
-			}
+			_renderTarget.Clear(Color.FromKnown(Colors.Black, 1));
 
 			for (var i = 0; i < dataWidth; i++)
 			{
-				var color = Color.FromRGB((float)rand.NextDouble(), (float)rand.NextDouble(), (float)rand.NextDouble());
+				var value = data[i];
+				var color1 = Color.FromRGB(255, 255 - value, 255 - value);
 
-				using (var brush = _renderTarget.CreateSolidColorBrush(color))
+				using (var brush1 = _renderTarget.CreateSolidColorBrush(color1))
 				{
-					_renderTarget.FillRect(brush,
+					_renderTarget.FillRect(brush1,
 						new RectF(
-							new PointF(i * blockWidth, height - data[i] * blockHeight),
-							new PointF((i + 1) * blockWidth, height - (data[i] + 1) * blockHeight)));
+							new PointF(i * blockWidth, height - value * blockHeight),
+							new PointF((i + 1) * blockWidth, height - (value + 1) * blockHeight)));
 				}
 			}
 
 			_cache = _renderTarget.CreateBitmap(
-				new SizeU((uint)ClientSize.Width, (uint)ClientSize.Height),
+				new SizeU((uint)pictArea.Width, (uint)pictArea.Height),
 				IntPtr.Zero,
 				0,
 				new BitmapProperties(new PixelFormat(DxgiFormat.B8G8R8A8_UNORM, AlphaMode.Ignore), 96, 96));
@@ -141,7 +142,7 @@ namespace FFTVisualizerApp
 			_cache.CopyFromRenderTarget(
 				new PointU(0, 0),
 				_renderTarget,
-				new RectU(0, 0, (uint)ClientSize.Width, (uint)ClientSize.Height));
+				new RectU(0, 0, (uint)pictArea.Width, (uint)pictArea.Height));
 
 			_renderTarget.EndDraw();
 		}
@@ -151,6 +152,28 @@ namespace FFTVisualizerApp
 			btnConnect.Visible = false;
 			_readSerialPortTask = Task.Run(() => ReadSerialPort(_cancel.Token));
 			_frameTimer.Start();
+
+			btnConnect.Enabled = false;
+		}
+
+		static void WaitForBytesReady(SerialPort serialPort, int bytes, CancellationToken token)
+		{
+			while (serialPort.BytesToRead < bytes)
+			{
+				Thread.Yield();
+				token.ThrowIfCancellationRequested();
+			}
+		}
+
+		static byte[] ReadBytes(SerialPort serialPort, CancellationToken token)
+		{
+			var buffer = new byte[_sampleCount];
+			WaitForBytesReady(serialPort, buffer.Length, token);
+
+			var count = serialPort.Read(buffer, 0, buffer.Length);
+			Debug.Assert(count == buffer.Length);
+
+			return buffer;
 		}
 
 		void ReadSerialPort(CancellationToken token)
@@ -159,38 +182,38 @@ namespace FFTVisualizerApp
 
 			var serialPort = new SerialPort("COM3", 115200);
 			serialPort.Open();
-
-			while (!token.IsCancellationRequested)
+			try
 			{
-				var buffer = new byte[128];
-
-				var headerIndex = 0;
-				while (headerIndex < header.Length)
+				while (!token.IsCancellationRequested)
 				{
-					var value = serialPort.ReadByte();
+					var headerIndex = 0;
 
-					if (value == header[headerIndex])
+					while (headerIndex < header.Length)
 					{
-						headerIndex++;
+						WaitForBytesReady(serialPort, 1, token);
+
+						var value = serialPort.ReadByte();
+
+						if (value == header[headerIndex])
+						{
+							headerIndex++;
+						}
+						else
+						{
+							headerIndex = 0;
+						}
 					}
-					else
-					{
-						headerIndex = 0;
-					}
+
+					_currentData = ReadBytes(serialPort, token);
 				}
-
-				while (serialPort.BytesToRead < buffer.Length)
-				{
-					Thread.Yield();
-				}
-
-				var count = serialPort.Read(buffer, 0, buffer.Length);
-				Debug.Assert(count == 128);
-
-				_currentData = buffer;
 			}
-
-			serialPort.Close();
+			catch (OperationCanceledException)
+			{
+			}
+			finally
+			{
+				serialPort.Close();
+			}
 		}
 	}
 }
