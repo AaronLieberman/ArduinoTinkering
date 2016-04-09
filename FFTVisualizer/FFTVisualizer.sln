@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FFTVisualizerApp", "FFTVisualizerApp\FFTVisualizerApp.csproj", "{78E6C8BB-62E3-43D6-963E-EA67097C0631}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Addle.Core", "D:\Projects\Git\Addle\Addle.Core\Addle.Core.csproj", "{D916F4B4-0F30-433D-8534-41B80880C737}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicSerialVisualizerApp", "MicSerialVisualizerApp\MicSerialVisualizerApp.csproj", "{54E6A147-EF25-4012-8FEE-B48D0F876BDC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +33,14 @@ Global
 		{D916F4B4-0F30-433D-8534-41B80880C737}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D916F4B4-0F30-433D-8534-41B80880C737}.Release|x64.ActiveCfg = Release|x64
 		{D916F4B4-0F30-433D-8534-41B80880C737}.Release|x64.Build.0 = Release|x64
+		{54E6A147-EF25-4012-8FEE-B48D0F876BDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54E6A147-EF25-4012-8FEE-B48D0F876BDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54E6A147-EF25-4012-8FEE-B48D0F876BDC}.Debug|x64.ActiveCfg = Debug|x64
+		{54E6A147-EF25-4012-8FEE-B48D0F876BDC}.Debug|x64.Build.0 = Debug|x64
+		{54E6A147-EF25-4012-8FEE-B48D0F876BDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54E6A147-EF25-4012-8FEE-B48D0F876BDC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54E6A147-EF25-4012-8FEE-B48D0F876BDC}.Release|x64.ActiveCfg = Release|x64
+		{54E6A147-EF25-4012-8FEE-B48D0F876BDC}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
