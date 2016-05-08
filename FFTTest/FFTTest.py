@@ -11,7 +11,7 @@ LINES, COLS = unicurses.getmaxyx(stdscr)
 
 samples = list()
 
-dataPath = 'c:\\users\\aaron_000\\desktop\\sin440.bin'
+dataPath = 'data\\sin440.bin'
 #dataPath = 'c:\\users\\aaron_000\\desktop\\whistle, talk.bin'
 with open(dataPath, 'rb', buffering=4096) as dataFile:
     while True:
