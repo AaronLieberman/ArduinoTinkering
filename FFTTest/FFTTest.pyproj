@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3d2a844e-832a-4fab-83e2-ace43aeb151f</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>FFTTest.py</StartupFile>
+    <StartupFile>FFTTest2.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,6 +24,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FFTTest.py" />
+    <Compile Include="FFTTest2.py" />
     <Compile Include="WaveGen.py" />
   </ItemGroup>
   <PropertyGroup>
