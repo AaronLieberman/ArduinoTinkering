@@ -3,6 +3,7 @@ import numpy as np
 import math
 import wave
 import struct
+import time
 
 stdscr = unicurses.initscr()
 unicurses.cbreak()
@@ -29,8 +30,8 @@ weighting = [2, 2, 8, 8, 16, 32, 64, 64] # Change these according to taste
 
 # Set up audio
 wavfile = wave.open('data/rebel-theme.wav','r')
-sample_rate = wavfile.getframerate()
-no_channels = wavfile.getnchannels()
+sampleRate = wavfile.getframerate()
+noChannels = wavfile.getnchannels()
 chunk = 4096 # Use a multiple of 8
 #output = aa.PCM(aa.PCM_PLAYBACK, aa.PCM_NORMAL)
 #output.setchannels(no_channels)
@@ -40,7 +41,7 @@ chunk = 4096 # Use a multiple of 8
 
 # Return power array index corresponding to a particular frequency
 def piff(val):
-    return int(2 * chunk * val / sample_rate)
+    return int(2 * chunk * val / sampleRate)
    
 def calculateLevels(sampleData, chunk):
     global matrix
@@ -65,6 +66,9 @@ def calculateLevels(sampleData, chunk):
     matrix = matrix.clip(0, height)
     return matrix
 
+lastTime = time.clock()
+frameTime = chunk / sampleRate
+
 data = wavfile.readframes(chunk)
 while data != '' and len(data) > 0:
     matrix = calculateLevels(data, chunk)
@@ -73,3 +77,7 @@ while data != '' and len(data) > 0:
 
     unicurses.refresh()
     #key = unicurses.getch()
+
+    now = time.clock()
+    time.sleep(max(frameTime - (now - lastTime), 0))
+    lastTime = now
