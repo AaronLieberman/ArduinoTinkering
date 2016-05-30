@@ -33,11 +33,6 @@ wavfile = wave.open('data/rebel-theme.wav','r')
 sampleRate = wavfile.getframerate()
 noChannels = wavfile.getnchannels()
 chunk = 4096 # Use a multiple of 8
-#output = aa.PCM(aa.PCM_PLAYBACK, aa.PCM_NORMAL)
-#output.setchannels(no_channels)
-#output.setrate(sample_rate)
-#output.setformat(aa.PCM_FORMAT_S16_LE)
-#output.setperiodsize(chunk)
 
 # Return power array index corresponding to a particular frequency
 def piff(val):
