@@ -1,4 +1,3 @@
-import unicurses
 import numpy as np
 import math
 import wave
@@ -7,13 +6,15 @@ import time
 import wave
 import alsaaudio as aa
 import decoder
+import signal
+import sys
+import curses
 
-stdscr = unicurses.initscr()
-unicurses.cbreak()
-unicurses.noecho()
-unicurses.curs_set(0)
-unicurses.keypad(stdscr, True)
-LINES, COLS = unicurses.getmaxyx(stdscr)
+stdscr = curses.initscr()
+curses.cbreak()
+curses.noecho()
+curses.curs_set(0)
+stdscr.keypad(1)
 
 height = 16
 
@@ -24,7 +25,7 @@ def drawData(data, x, y):
             c = ' '
             if (j <= v - 1):
                 c = '#'
-            unicurses.mvaddstr(y + height - 1 - j, x + i, c)
+            stdscr.addstr(y + height - 1 - j, x + i, c)
 
 # Initialize matrix
 matrix = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -36,6 +37,15 @@ wavfile = wave.open('data/rebel-theme.wav','r')
 sampleRate = wavfile.getframerate()
 numChannels = wavfile.getnchannels()
 chunk = 4096 # Use a multiple of 8
+
+def signal_handler(signal, frame):
+    print('hi')
+    curses.nocbreak()
+    stdscr.keypad(0)
+    curses.echo()
+    curses.endwin()
+    sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
 
 output = aa.PCM(aa.PCM_PLAYBACK, aa.PCM_NORMAL)
 output.setchannels(numChannels)
@@ -80,8 +90,8 @@ while data != '' and len(data) > 0:
     drawData(matrix, 0, 0)
     data = wavfile.readframes(chunk)
 
-    unicurses.refresh()
-    #key = unicurses.getch()
+    stdscr.refresh()
+    #key = curses.getch()
 
     now = time.clock()
     time.sleep(max(frameTime - (now - lastTime), 0))
