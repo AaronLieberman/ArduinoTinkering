@@ -4,9 +4,6 @@ import math
 import wave
 import struct
 import time
-import alsaaudio as aa
-import decoder
-import wave
 
 stdscr = unicurses.initscr()
 unicurses.cbreak()
@@ -34,14 +31,8 @@ weighting = [2, 2, 8, 8, 16, 32, 64, 64] # Change these according to taste
 # Set up audio
 wavfile = wave.open('data/rebel-theme.wav','r')
 sampleRate = wavfile.getframerate()
-numChannels = wavfile.getnchannels()
+noChannels = wavfile.getnchannels()
 chunk = 4096 # Use a multiple of 8
-
-output = aa.PCM(aa.PCM_PLAYBACK, aa.PCM_NORMAL)
-output.setchannels(noChannels)
-output.setrate(sampleRate)
-output.setformat(aa.PCM_FORMAT_S16_LE)
-output.setperiodsize(chunk)
 
 # Return power array index corresponding to a particular frequency
 def piff(val):
@@ -75,8 +66,6 @@ frameTime = chunk / sampleRate
 
 data = wavfile.readframes(chunk)
 while data != '' and len(data) > 0:
-    output.write(data)
-
     matrix = calculateLevels(data, chunk)
     drawData(matrix, 0, 0)
     data = wavfile.readframes(chunk)
