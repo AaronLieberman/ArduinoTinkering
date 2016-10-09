@@ -63,9 +63,9 @@ void loop()
     pixels.setPixelColor(i, pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
 
     pixels.show(); // This sends the updated pixel color to the hardware.
-
-    delay(delayval); // Delay for a period of time (in milliseconds).
   }
+
+  delay(delayval); // Delay for a period of time (in milliseconds).
 
   hue = hue + hueOffset >= 1 ? 0 : hue + hueOffset;
   phase = phase + phaseOffset >= 1 ? 0 : phase + phaseOffset;
