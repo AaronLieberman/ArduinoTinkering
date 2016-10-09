@@ -16,8 +16,8 @@ const byte digitShiftRegisterClockPin = 5;
 const byte temperatureSensorPin = 8;
 
 // keep the temperature between these values
-const int lowTemp = 138;
-const int highTemp = 142;
+const int lowTemp = 148;
+const int highTemp = 152;
 
 volatile float temperatureInF;
 
