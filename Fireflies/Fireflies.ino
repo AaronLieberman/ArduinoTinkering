@@ -27,7 +27,7 @@ struct Firefly
 
 Firefly fireflies[numNeopixels];
 
-float fireflyChance = 200;
+int fireflyChance(float scaler) { return 1000 * scaler; }
 int fireflyLifetime() { return random (100, 200); }
 
 Color3F fireflyColor()
@@ -67,6 +67,8 @@ void setPixels(Color3F c, int from, int to, bool show, int brightness = 255)
 
 void loop()
 {
+  float potValue = (float)analogRead(pinPot) / 1023;
+
   for (int i = 0; i < numNeopixels; i++)
   {
     auto& firefly = fireflies[i];
@@ -82,7 +84,7 @@ void loop()
     }
     else
     {
-      if (random(0, fireflyChance) == 0)
+      if (random(0, fireflyChance(potValue)) == 0)
       {
         firefly.active = true;
         firefly.lifetime = fireflyLifetime();
