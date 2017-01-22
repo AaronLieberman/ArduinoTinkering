@@ -9,13 +9,13 @@
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
 const int pinNeopixels = 5;
-const int numNeopixels = 10;
-const int pinPot = A0;
+const int numNeopixels = 6;
+const bool newPixelsAreRgb = false                                                                                                                                                                                                                  ;
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
-auto pixels = Adafruit_NeoPixel(numNeopixels, pinNeopixels, NEO_GRB + NEO_KHZ800);
+auto pixels = Adafruit_NeoPixel(numNeopixels, pinNeopixels, (newPixelsAreRgb ? NEO_RGB : NEO_GRB) + NEO_KHZ800);
 
 struct Firefly
 {
@@ -27,18 +27,19 @@ struct Firefly
 
 Firefly fireflies[numNeopixels];
 
-int fireflyChance(float scaler) { return 1000 * scaler; }
-int fireflyLifetime() { return random (100, 200); }
+int fireflyChance() { return 400; }
+int fireflyLifetime() { return random (150, 250); }
 
 Color3F fireflyColor()
 {
   switch (random(0, 3))
   {
-    case 1: return Color3F(0.75f, 0.75f, 0.25f);
-    case 2: return Color3F(0.125f, 0.5f, 0.125f);
+    case 0: return Color3F(102, 255, 64) / 255.f;
+    case 1: return Color3F(32, 128, 48) / 255.f;
+    case 2: return Color3F(255, 255, 32) / 255.f;
   }
 
-  return Color3F(1, 1, 1);
+  return Color3Fs::Blue();
 }
 
 void setup()
@@ -61,18 +62,18 @@ void setPixels(Color3F c, int from, int to, bool show, int brightness = 255)
 
   if (show)
   {
-    pixels.show();
+  bool anyFirefliesActive = false;
+  for (int i = 0; i < numNeopixels; i++)
+  {
+    anyFirefliesActive = anyFirefliesActive || fireflies[i].active;
   }
-}
 
-void loop()
-{
-  float potValue = (float)analogRead(pinPot) / 1023;
+  int forceActivateIndex = anyFirefliesActive ? -1 : random(numNeopixels);
 
   for (int i = 0; i < numNeopixels; i++)
   {
     auto& firefly = fireflies[i];
-    
+
     if (firefly.active)
     {
       firefly.progress++;
@@ -84,7 +85,7 @@ void loop()
     }
     else
     {
-      if (random(0, fireflyChance(potValue)) == 0)
+      if (forceActivateIndex == i || random(fireflyChance()) == 0)
       {
         firefly.active = true;
         firefly.lifetime = fireflyLifetime();
@@ -95,6 +96,7 @@ void loop()
 
     int s = sin((float)firefly.progress / firefly.lifetime * PI) * 255;
     auto color = firefly.active ? firefly.color * s : Color3Fs::Black();
+    color = Color3Fs::White() * 255;
 
     pixels.setPixelColor(i, color.R, color.G, color.B);
   }

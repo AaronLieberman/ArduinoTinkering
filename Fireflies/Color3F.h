@@ -24,6 +24,16 @@ public:
   {
     return Color3F(R * s, G * s, B * s);
   }
+
+  Color3F operator/(float s)
+  {
+    return Color3F(R / s, G / s, B / s);
+  }
+
+  Color3F operator+(Color3F o)
+  {
+    return Color3F(R + o.R, G + o.G, B + o.B);
+  }
 };
 
 class Color3Fs
