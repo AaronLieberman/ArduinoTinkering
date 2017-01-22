@@ -1,3 +1,9 @@
+// LED sensor from http://playground.arduino.cc/Learning/LEDSensor
+
+// Setup:
+//  - Connect pinPos to LED anode (+)
+//  - Connect pinNeg through 330 ohm resistor to cathode (-).
+
 class LEDLightDetector
 {
 public:

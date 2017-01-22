@@ -1,23 +1,20 @@
-// LED sensor from http://playground.arduino.cc/Learning/LEDSensor
+// See setup instructions in LEDLightDetector.h
 
 #include "LEDLightDetector.h"
 
-#define LED_N_SIDE 2
-#define LED_P_SIDE 3
+const int pinOutput = 7;
 
-#define LED_OUTPUT 7
-
-LEDLightDetector g_detector(LED_P_SIDE, LED_N_SIDE, 100000);
+LEDLightDetector g_detector(3, 2, 100000);
 
 void setup()
 {
-  pinMode(LED_OUTPUT, OUTPUT);
+  pinMode(pinOutput, OUTPUT);
 }
 
 void loop()
 {
   g_detector.tick();
 
-  digitalWrite(LED_OUTPUT, g_detector.isActive() ? HIGH : LOW);
+  digitalWrite(pinOutput, g_detector.isActive() ? HIGH : LOW);
 }
 
