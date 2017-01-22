@@ -9,13 +9,17 @@
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
 const int pinNeopixels = 5;
-const int numNeopixels = 6;
-const bool newPixelsAreRgb = false                                                                                                                                                                                                                  ;
+const int numNeopixels = 5;
+const bool newPixelsAreRgb = false;
+const int pinNeopixels2 = 3;
+const int numNeopixels2 = 1;
+const bool newPixelsAreRgb2 = true;
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
 auto pixels = Adafruit_NeoPixel(numNeopixels, pinNeopixels, (newPixelsAreRgb ? NEO_RGB : NEO_GRB) + NEO_KHZ800);
+auto pixels2 = Adafruit_NeoPixel(numNeopixels2, pinNeopixels2, (newPixelsAreRgb2 ? NEO_RGB : NEO_GRB) + NEO_KHZ800);
 
 struct Firefly
 {
@@ -50,18 +54,12 @@ void setup()
 #endif
   // End of trinket special code
 
-  pixels.begin(); // This initializes the NeoPixel library.
+  pixels.begin();
+  pixels2.begin();
 }
 
-void setPixels(Color3F c, int from, int to, bool show, int brightness = 255)
-{
-  for (int i = from; i < to; i++)
-  {
-    pixels.setPixelColor(i, c.R * brightness, c.G * brightness, c.B * brightness);
-  }
-
-  if (show)
-  {
+void loop()
+{ 
   bool anyFirefliesActive = false;
   for (int i = 0; i < numNeopixels; i++)
   {
@@ -96,12 +94,15 @@ void setPixels(Color3F c, int from, int to, bool show, int brightness = 255)
 
     int s = sin((float)firefly.progress / firefly.lifetime * PI) * 255;
     auto color = firefly.active ? firefly.color * s : Color3Fs::Black();
-    color = Color3Fs::White() * 255;
 
     pixels.setPixelColor(i, color.R, color.G, color.B);
   }
 
   pixels.show();
+  auto glowScale = (sin((millis() % 2000) / 2000.f * 2 * PI) / 4 + 0.75);
+  auto color2 = Color3F(255, 255, 64) * glowScale;
+  pixels2.setPixelColor(0, color2.R, color2.G, color2.B);
+  pixels2.show();
 
   delay(10);
 }
