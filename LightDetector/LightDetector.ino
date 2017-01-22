@@ -16,9 +16,8 @@ void setup()
 
 void loop()
 {
-  g_detector.loop();
+  g_detector.tick();
 
   digitalWrite(LED_OUTPUT, g_detector.isActive() ? HIGH : LOW);
-
 }
 

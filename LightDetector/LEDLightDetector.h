@@ -13,7 +13,7 @@ public:
     m_endMicros = micros() + m_thresholdMicros;
   }
 
-  void loop()
+  void tick()
   {
     unsigned long now = micros();
 
@@ -46,3 +46,4 @@ private:
   bool m_isActive;
   
 };
+
