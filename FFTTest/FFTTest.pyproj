@@ -24,7 +24,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FFTTest.py" />
-    <Compile Include="FFTTest2.py" />
+    <Compile Include="FFTTest2-pi.py" />
+    <Compile Include="FFTTest2-win.py" />
     <Compile Include="WaveGen.py" />
   </ItemGroup>
   <PropertyGroup>
