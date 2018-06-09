@@ -1,0 +1,5 @@
+{
+    "sketch": "NeoPixelHue\\NeoPixelHue.ino",
+    "board": "adafruit:samd:adafruit_trinket_m0",
+    "output": ".output"
+}

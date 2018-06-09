@@ -1,15 +1,14 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-  #include <avr/power.h>
-#endif
+
+#include "Color3F.h"
 
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
-#define PIN            6
+#define PIN            4
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS      28
+#define NUMPIXELS      15
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
@@ -19,13 +18,7 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ80
 int delayval = 1;
 
 void setup() {
-  // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
-#if defined (__AVR_ATtiny85__)
-  if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
-#endif
-  // End of trinket special code
-
-  pixels.begin(); // This initializes the NeoPixel library.
+  pixels.begin();
 }
 
 float hue = 0;
@@ -68,6 +61,4 @@ void loop()
   hue = hue + hueOffset >= 1 ? 0 : hue + hueOffset;
   phase = phase + phaseOffset >= 1 ? 0 : phase + phaseOffset;
 }
-
-
 
