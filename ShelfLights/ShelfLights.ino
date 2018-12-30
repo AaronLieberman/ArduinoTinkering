@@ -2,62 +2,67 @@
 #include <Adafruit_NeoPixel.h>
 
 #include "Color3F.h"
+#include "LatchButton.h"
 
-// Which pin on the Arduino is connected to the NeoPixels?
-// On a Trinket or Gemma we suggest changing this to 1
-#define PIN 4
+const int kNeoPixelPin = 4;
+const int kNumNeoPixels = 15;
 
-// How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS 15
+const int kSwitchPin = 2;
 
-// When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
-// Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
-// example for more information on possible values.
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(kNumNeoPixels, kNeoPixelPin, NEO_GRB + NEO_KHZ800);
 
-int delayval = 1;
+float hue = 0;
+const float hueOffset = 0.002f;
+float phase = 0;
+const float phaseOffset = 1.0f / 167;
+const float widthScale = 1.5f;
+
+LatchButton switchButton(kSwitchPin);
+bool powerOn = false;
 
 void setup()
 {
 	pixels.begin();
+	switchButton.initialize();
 }
 
-float hue = 0;
-const float hueOffset = 0.01f;
-float phase = 0;
-const float phaseOffset = 1.0f / 167;
-
-Color3F GenerateHue(float hue)
+Color3F AnimateColor(Color3F baseColor, float ampScale, float x)
 {
-	float u = cos(hue * 2 * M_PI);
-	float w = sin(hue * 2 * M_PI);
-
-	Color3F ret;
-	float s = 255;
-
-	float third = 1.0f / 3;
-	ret.R = (cos(hue * 2 * M_PI) / 2 + 0.5f) * s;
-	ret.G = (cos((hue + third) * 2 * M_PI) / 2 + 0.5f) * s;
-	ret.B = (cos((hue + 2 * third) * 2 * M_PI) / 2 + 0.5f) * s;
-
-	return ret;
+	float s = ((cos(x * 2 * M_PI) / 2 + 0.5f) * ampScale + (1.0f - ampScale));
+	return baseColor * s;
 }
 
 void loop()
 {
-	// For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
-
-	for (int i = 0; i < NUMPIXELS; i++)
+	if (switchButton.getAndClearState())
 	{
-		Color3F c = GenerateHue(hue + ((float)i) / NUMPIXELS);
-
-		float brightness = cos((phase + 1.0f * i / NUMPIXELS) * 2 * M_PI) / 2 + 0.5f;
-		pixels.setPixelColor(i, pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
-
-		pixels.show(); // This sends the updated pixel color to the hardware.
+		powerOn = !powerOn;
 	}
 
-	delay(delayval); // Delay for a period of time (in milliseconds).
+	if (powerOn)
+	{
+		for (int i = 0; i < kNumNeoPixels; i++)
+		{
+			Color3F baseColor = Color3F::FromBytes(255, 199, 84);
+			Color3F c = AnimateColor(baseColor, 0.8f, hue + ((float)i / widthScale) / kNumNeoPixels) * 0.6f;
+
+			float brightness = cos((phase + 1.0f * i / kNumNeoPixels) * 2 * M_PI) / 2 + 0.5f * 255;
+			pixels.setPixelColor(i, pixels.Color(c.R * brightness, c.G * brightness, c.B * brightness));
+		}
+
+		pixels.show();
+		delay(1);
+	}
+	else
+	{
+		for (int i = 0; i < kNumNeoPixels; i++)
+		{
+			pixels.setPixelColor(i, pixels.Color(0, 0, 0));
+		}
+
+		pixels.show();
+		delay(100);
+	}
 
 	hue = hue + hueOffset >= 1 ? 0 : hue + hueOffset;
 	phase = phase + phaseOffset >= 1 ? 0 : phase + phaseOffset;
