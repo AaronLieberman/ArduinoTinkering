@@ -40,7 +40,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="System.Windows" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -104,14 +105,19 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Code\Core\Core.csproj">
+    <ProjectReference Include="..\..\..\Addle\Addle.Core\Addle.Core.csproj">
       <Project>{d916f4b4-0f30-433d-8534-41b80880c737}</Project>
-      <Name>Core</Name>
+      <Name>Addle.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Code\Wpf\Wpf.csproj">
+    <ProjectReference Include="..\..\..\Addle\Addle.Wpf\Addle.Wpf.csproj">
       <Project>{65665deb-c1f3-46b2-93c4-b9de90f8ad22}</Project>
-      <Name>Wpf</Name>
+      <Name>Addle.Wpf</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Reactive">
+      <Version>4.1.2</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
