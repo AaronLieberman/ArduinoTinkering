@@ -1,0 +1,26 @@
+﻿<Window x:Class="RobotControl.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RobotControl"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="400">
+    <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="8,8">
+            <TextBlock>Serial port:</TextBlock>
+            <TextBox Width="60" Margin="8,0" Text="{Binding SerialPortName}" />
+            <Button>Connect</Button>
+        </StackPanel>
+        <ItemsControl ItemsSource="{Binding Servos}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="8,4">
+                        <TextBlock Text="{Binding Name}" Width="60" Margin="0,0,8,0"/>
+                        <Slider Width="120" Minimum="{Binding Min}" Maximum="{Binding Max}" Value="{Binding Value}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</Window>

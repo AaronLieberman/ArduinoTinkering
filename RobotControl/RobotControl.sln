@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2041
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RobotControl", "RobotControl\RobotControl.csproj", "{4C0A42AE-9471-4CA4-BB1C-90D45BEBF22A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "..\..\..\Code\Core\Core.csproj", "{D916F4B4-0F30-433D-8534-41B80880C737}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wpf", "..\..\..\Code\Wpf\Wpf.csproj", "{65665DEB-C1F3-46B2-93C4-B9DE90F8AD22}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C0A42AE-9471-4CA4-BB1C-90D45BEBF22A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C0A42AE-9471-4CA4-BB1C-90D45BEBF22A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C0A42AE-9471-4CA4-BB1C-90D45BEBF22A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C0A42AE-9471-4CA4-BB1C-90D45BEBF22A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D916F4B4-0F30-433D-8534-41B80880C737}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D916F4B4-0F30-433D-8534-41B80880C737}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D916F4B4-0F30-433D-8534-41B80880C737}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D916F4B4-0F30-433D-8534-41B80880C737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65665DEB-C1F3-46B2-93C4-B9DE90F8AD22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65665DEB-C1F3-46B2-93C4-B9DE90F8AD22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65665DEB-C1F3-46B2-93C4-B9DE90F8AD22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65665DEB-C1F3-46B2-93C4-B9DE90F8AD22}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4C0CB594-BC74-4036-9B03-871DA558F684}
+	EndGlobalSection
+EndGlobal
