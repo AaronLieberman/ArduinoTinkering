@@ -180,7 +180,7 @@ namespace FFTVisualizerApp
 		{
 			var header = new byte[] { 0xFF, 0xFE, 0xFF, 0xFE };
 
-			var serialPort = new SerialPort("COM3", 115200);
+			var serialPort = new SerialPort("COM6", 115200);
 			serialPort.Open();
 			try
 			{

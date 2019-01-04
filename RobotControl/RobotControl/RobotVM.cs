@@ -25,8 +25,8 @@ namespace RobotControl
                 _servos.Add(new ServoVM(servo.Name, v => servoManager.SetServoPosition(servo.ServoIndex, v)));
             }
 
-            Connect = new ActionCommand(() => _servoManager.Start(_serialPortName));
-            Clear = new ActionCommand(() => _receivedMessages.Clear());
+            ConnectCommand = new ActionCommand(() => _servoManager.Start(_serialPortName));
+            ClearMessagesCommand = new ActionCommand(() => _receivedMessages.Clear());
 
             _servoManager.MessageReceived.ObserveOnDispatcher().Subscribe(s => MessageReceived(s));
         }
@@ -44,8 +44,8 @@ namespace RobotControl
         public int ReceivedMessageIndex { get { return _receivedMessageIndex; } set { SetProperty(ref _receivedMessageIndex, value); } }
         #endregion
 
-        public ActionCommand Connect { get; }
-        public ActionCommand Clear { get; }
+        public ActionCommand ConnectCommand { get; }
+        public ActionCommand ClearMessagesCommand { get; }
 
         void MessageReceived(string message)
         {

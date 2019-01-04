@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Addle.Core.Linq;
 
 namespace RobotControl
 {
@@ -18,7 +15,7 @@ namespace RobotControl
         readonly Dictionary<int, float> _lastSentValues = new Dictionary<int, float>();
         readonly Dictionary<int, float> _currentValues = new Dictionary<int, float>();
         readonly Subject<string> _messageReceived = new Subject<string>();
-        bool _running = false;
+        bool _running;
         Task _work;
 
         public ServoManager()
@@ -48,8 +45,8 @@ namespace RobotControl
             Stop();
         }
 
-        public IEnumerable<Servo> Servos { get { return _servos; } }
-        public IObservable<string> MessageReceived { get { return _messageReceived; } }
+        public IEnumerable<Servo> Servos => _servos;
+        public IObservable<string> MessageReceived => _messageReceived;
 
         public void Start(string serialPortName)
         {
@@ -75,18 +72,32 @@ namespace RobotControl
 
         void Run(string serialPortName)
         {
-            using (var serialPort = new SerialPort(serialPortName, 115200))
+            using (var serialPort = new SerialPortCommunicator(serialPortName))
             {
                 serialPort.Open();
-                var buffer = new byte[4096];
+                var readBuffer = new byte[4096];
+                int readBufferPos = 0;
+                //var writeBuffer = new byte[serialPort.WriteBufferSize];
 
                 while (_running)
                 {
-                    if (serialPort.BytesToRead > 0)
-                    {
-                        var count = serialPort.Read(buffer, 0, buffer.Length);
+                    var bytesRead = serialPort.Read(readBuffer, readBufferPos,
+                        readBuffer.Length - readBufferPos);
+                    readBufferPos += bytesRead;
 
-                        // throw away read bytes for now
+                    if (bytesRead > 0)
+                    {
+                        for (var i = 0; i < readBufferPos; i++)
+                        {
+                            if (readBuffer[i] == '\n')
+                            {
+                                var line = Encoding.ASCII.GetString(readBuffer, 0, i).Trim();
+                                Buffer.BlockCopy(readBuffer, i + 1, readBuffer, 0, readBufferPos - (i + 1));
+                                readBufferPos -= i + 1;
+                                Console.WriteLine(line);
+                                break;
+                            }
+                        }
                     }
                     else
                     {
@@ -96,7 +107,7 @@ namespace RobotControl
                     Debug.Assert(_currentValues.Count == _lastSentValues.Count);
                     for (int i = 0; i < _currentValues.Count; i++)
                     {
-                        serialPort.WriteLine($"{i}: {_currentValues[i]}");
+                        //serialPort.WriteLine($"{i}: {_currentValues[i]}");
                     }
                 }
 

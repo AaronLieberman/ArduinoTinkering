@@ -62,6 +62,7 @@
     </ApplicationDefinition>
     <Compile Include="Program.cs" />
     <Compile Include="RobotVM.cs" />
+    <Compile Include="SerialPortCommunicator.cs" />
     <Compile Include="Servo.cs" />
     <Compile Include="ServoManager.cs" />
     <Compile Include="ServoVM.cs" />

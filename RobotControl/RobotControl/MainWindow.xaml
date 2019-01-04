@@ -10,7 +10,7 @@
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="8,8" HorizontalAlignment="Center">
             <TextBlock>Serial port:</TextBlock>
             <TextBox Width="60" Margin="8,0" Text="{Binding SerialPortName}" />
-            <Button Command="{Binding Connect}">Connect</Button>
+            <Button Command="{Binding ConnectCommand}">Connect</Button>
         </StackPanel>
         <ItemsControl ItemsSource="{Binding Servos}" HorizontalAlignment="Center" DockPanel.Dock="Top">
             <ItemsControl.ItemTemplate>
@@ -25,7 +25,7 @@
         <DockPanel Margin="8,8">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
                 <TextBlock Margin="8,0">Received:</TextBlock>
-                <Button Command="{Binding ClearMessages}">Clear</Button>
+                <Button Command="{Binding ClearMessagesCommand}">Clear</Button>
             </StackPanel>
             <ListBox ItemsSource="{Binding ReceivedMessages}" SelectedIndex="{Binding ReceivedMessageIndex}" />
         </DockPanel>
