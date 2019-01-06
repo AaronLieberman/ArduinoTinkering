@@ -8,13 +8,19 @@ namespace RobotControl
 {
     class Servo
     {
-        public Servo(string name, int servoIndex)
+        public Servo(string name, int servoIndex, float min, float max, float initialValue)
         {
             Name = name;
             ServoIndex = servoIndex;
+            Min = min;
+            Max = max;
+            InitialValue = initialValue;
         }
 
-        public string Name { get; private set; }
-        public int ServoIndex { get; private set; }
+        public string Name { get; }
+        public int ServoIndex { get; }
+        public float Min { get; }
+        public float Max { get; }
+        public float InitialValue { get; }
     }
 }

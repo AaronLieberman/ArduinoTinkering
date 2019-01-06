@@ -76,6 +76,8 @@ namespace RobotControl
 
         public void Close()
         {
+            Task task = _task;
+
             lock (_lockObject)
             {
                 if (_task != null)
@@ -83,10 +85,11 @@ namespace RobotControl
                     _cancellation.Cancel();
                     _cancellation = null;
                     _readStream = null;
-                    _task.Wait();
                     _task = null;
                 }
             }
+
+            task?.Wait();
         }
 
         public int Read(byte[] buffer, int offset, int count)
@@ -159,13 +162,37 @@ namespace RobotControl
                         }
                     }
 
-                    if (writeStream.Length > 0)
+                    bool anyBytesToWrite = false;
+                    lock (_lockObject)
                     {
-                        uint bytesWritten;
-                        var writeFileResult = SerialPortExternals.WriteFile(hComm, writeStream.GetBuffer(),
-                            (uint) writeStream.Length, out bytesWritten, IntPtr.Zero);
-                        Debug.Assert(writeFileResult);
-                        Buffer.BlockCopy(
+                        anyBytesToWrite = writeStream.Length > 0;
+                    }
+
+                    if (anyBytesToWrite)
+                    {
+                        var attemptToWriteBytes = Math.Min((int)writeStream.Length, buffer.Length);
+                        lock (_lockObject)
+                        {
+                            Buffer.BlockCopy(writeStream.GetBuffer(), 0, buffer, 0, attemptToWriteBytes);
+                        }
+
+                        var writeFileResult = SerialPortExternals.WriteFile(hComm, buffer, (uint)attemptToWriteBytes,
+                            out var bytesWritten, IntPtr.Zero);
+
+                        if (writeFileResult && bytesWritten > 0)
+                        {
+                            lock (_lockObject)
+                            {
+                                var bytesRemaining = (int)(writeStream.Length - bytesWritten);
+                                if (bytesRemaining > 0)
+                                {
+                                    Buffer.BlockCopy(writeStream.GetBuffer(), (int)bytesWritten,
+                                        writeStream.GetBuffer(), 0, bytesRemaining);
+                                }
+
+                                writeStream.SetLength(bytesRemaining);
+                            }
+                        }
 
                         anyWorkDone = true;
                     }
@@ -185,4 +212,85 @@ namespace RobotControl
             }
         }
     }
+
+    #region NewLineStream?
+
+    class NewLineStream : Stream
+    {
+        readonly object _lockObject = new object();
+        readonly MemoryStream _stream = new MemoryStream();
+        int _foundNewlinePos = -1;
+
+        public void AddData(byte[] buffer, int count)
+        {
+            if (count == 0) return;
+
+            lock (_lockObject)
+            {
+                _stream.Write(buffer, 0, count);
+                if (_foundNewlinePos == -1)
+                {
+                    var streamBuffer = _stream.GetBuffer();
+                    for (int i = 0; i < streamBuffer.Length; i++)
+                    {
+                        if (streamBuffer[i] == '\n')
+                        {
+                            _foundNewlinePos = i;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int bytesRead = 0;
+
+            lock (_lockObject)
+            {
+                if (_foundNewlinePos >= 0)
+                {
+                    bytesRead = Math.Min(count, _foundNewlinePos);
+                    Buffer.BlockCopy(_stream.GetBuffer(), 0, buffer, offset, bytesRead);
+                    _stream.SetLength(_stream.GetBuffer().Length - bytesRead);
+                }
+            }
+
+            return bytesRead;
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => Math.Max(_foundNewlinePos, 0);
+            set => throw new NotSupportedException();
+        }
+    }
+
+    #endregion
 }

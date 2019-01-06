@@ -6,14 +6,27 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Addle.Core.Threading;
 
 namespace RobotControl
 {
     class ServoManager : IDisposable
     {
+        class Synchronized
+        {
+            public Synchronized()
+            {
+                CurrentOutputEnabled = true;
+            }
+
+            public Dictionary<int, float> LastSentValues { get; } = new Dictionary<int, float>();
+            public Dictionary<int, float> CurrentValues { get; } = new Dictionary<int, float>();
+            public bool LastSentOutputEnabled { get; set; }
+            public bool CurrentOutputEnabled { get; set; }
+        }
+
         readonly List<Servo> _servos = new List<Servo>();
-        readonly Dictionary<int, float> _lastSentValues = new Dictionary<int, float>();
-        readonly Dictionary<int, float> _currentValues = new Dictionary<int, float>();
+        readonly SynchronizedValue<Synchronized> _state = new SynchronizedValue<Synchronized>(new Synchronized());
         readonly Subject<string> _messageReceived = new Subject<string>();
         bool _running;
         Task _work;
@@ -22,21 +35,25 @@ namespace RobotControl
         {
             var servos = new[]
             {
-                new { Name = "R Torso" },
-                new { Name = "R Shoulder" },
-                new { Name = "R Upper" },
-                new { Name = "R Lower" },
-                new { Name = "L Torso" },
-                new { Name = "L Shoulder" },
-                new { Name = "L Upper" },
-                new { Name = "L Lower" }
+                new {Name = "R Lower", Min = 150, Max = 500, Initial = 330},
+                new {Name = "R Upper", Min = 150, Max = 500, Initial = 320},
+                new {Name = "R Shoulder", Min = 150, Max = 500, Initial = 345},
+                new {Name = "R Torso", Min = 150, Max = 500, Initial = 290},
+                new {Name = "L Lower", Min = 150, Max = 500, Initial = 330},
+                new {Name = "L Upper", Min = 150, Max = 500, Initial = 320},
+                new {Name = "L Shoulder", Min = 150, Max = 500, Initial = 345},
+                new {Name = "L Torso", Min = 150, Max = 500, Initial = 290}
             };
 
-            foreach (var element in servos.Select((a, i) => new { Servo = a, Index = i }))
+            using (var state = _state.Lock())
             {
-                _servos.Add(new Servo(element.Servo.Name, element.Index));
-                _currentValues[element.Index] = 0;
-                _lastSentValues[element.Index] = float.MinValue;
+                foreach (var element in servos.Select((a, i) => new {Servo = a, Index = i}))
+                {
+                    var servo = element.Servo;
+                    _servos.Add(new Servo(servo.Name, element.Index, servo.Min, servo.Max, servo.Initial));
+                    state.Value.CurrentValues[element.Index] = servo.Initial;
+                    state.Value.LastSentValues[element.Index] = float.MinValue;
+                }
             }
         }
 
@@ -67,7 +84,16 @@ namespace RobotControl
 
         public void SetServoPosition(int index, float value)
         {
-            _currentValues[index] = value;
+            using (var currentValues = _state.Lock())
+            {
+                currentValues.Value.CurrentValues[index] = value;
+            }
+        }
+
+        public bool OutputEnabled
+        {
+            get => _state.WithLock(v => v.CurrentOutputEnabled);
+            set => _state.WithLock(v => v.CurrentOutputEnabled = value);
         }
 
         void Run(string serialPortName)
@@ -77,12 +103,18 @@ namespace RobotControl
                 serialPort.Open();
                 var readBuffer = new byte[4096];
                 int readBufferPos = 0;
-                //var writeBuffer = new byte[serialPort.WriteBufferSize];
+
+                Thread.Sleep(1000);
+
+                void SendText(string s)
+                {
+                    var bytesToWrite = Encoding.ASCII.GetBytes(s);
+                    serialPort.Write(bytesToWrite, 0, bytesToWrite.Length);
+                }
 
                 while (_running)
                 {
-                    var bytesRead = serialPort.Read(readBuffer, readBufferPos,
-                        readBuffer.Length - readBufferPos);
+                    var bytesRead = serialPort.Read(readBuffer, readBufferPos, readBuffer.Length - readBufferPos);
                     readBufferPos += bytesRead;
 
                     if (bytesRead > 0)
@@ -95,6 +127,7 @@ namespace RobotControl
                                 Buffer.BlockCopy(readBuffer, i + 1, readBuffer, 0, readBufferPos - (i + 1));
                                 readBufferPos -= i + 1;
                                 Console.WriteLine(line);
+                                _messageReceived.OnNext(line);
                                 break;
                             }
                         }
@@ -104,12 +137,30 @@ namespace RobotControl
                         Thread.Yield();
                     }
 
-                    Debug.Assert(_currentValues.Count == _lastSentValues.Count);
-                    for (int i = 0; i < _currentValues.Count; i++)
+                    using (var state = _state.Lock())
                     {
-                        //serialPort.WriteLine($"{i}: {_currentValues[i]}");
+                        var value = state.Value;
+                        Debug.Assert(value.CurrentValues.Count == value.LastSentValues.Count);
+                        for (int i = 0; i < value.CurrentValues.Count; i++)
+                        {
+                            if (Math.Abs(value.LastSentValues[i] - value.CurrentValues[i]) > 0.001f)
+                            {
+                                var stringToSend = $"servo {i}: {value.CurrentValues[i]}\r\n";
+                                SendText(stringToSend);
+                                value.LastSentValues[i] = value.CurrentValues[i];
+                            }
+                        }
+
+                        if (value.LastSentOutputEnabled != value.CurrentOutputEnabled)
+                        {
+                            var stringToSend = $"outputEnable: {(value.CurrentOutputEnabled ? "true" : "false")}\r\n";
+                            SendText(stringToSend);
+                            value.LastSentOutputEnabled = value.CurrentOutputEnabled;
+                        }
                     }
                 }
+
+                SendText("outputEnable: false\r\n");
 
                 serialPort.Close();
             }

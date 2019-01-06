@@ -13,8 +13,8 @@ namespace RobotControl
     class RobotVM : ViewModelBase
     {
         readonly List<ServoVM> _servos = new List<ServoVM>();
-        readonly ServoManager _servoManager;
         readonly ObservableCollection<string> _receivedMessages = new ObservableCollection<string>();
+        readonly ServoManager _servoManager;
 
         public RobotVM(ServoManager servoManager)
         {
@@ -22,26 +22,48 @@ namespace RobotControl
 
             foreach (var servo in servoManager.Servos)
             {
-                _servos.Add(new ServoVM(servo.Name, v => servoManager.SetServoPosition(servo.ServoIndex, v)));
+                // copy loop variable so we're getting each servo separately
+                var servoCopy = servo;
+                _servos.Add(new ServoVM(servo.Name, v => SetServoPosition(servoCopy, v), servo.Min, servo.Max, servo.InitialValue));
             }
 
-            ConnectCommand = new ActionCommand(() => _servoManager.Start(_serialPortName));
-            ClearMessagesCommand = new ActionCommand(() => _receivedMessages.Clear());
+            OutputEnabled = _servoManager.OutputEnabled;
 
-            _servoManager.MessageReceived.ObserveOnDispatcher().Subscribe(s => MessageReceived(s));
+            ConnectCommand = new ActionCommand(() => servoManager.Start(_serialPortName));
+            ClearMessagesCommand = new ActionCommand(ClearMessages);
+
+            servoManager.MessageReceived.ObserveOnDispatcher().Subscribe(MessageReceived);
         }
 
-        public IEnumerable<ServoVM> Servos { get { return _servos; } }
-        public IEnumerable<string> ReceivedMessages { get { return _receivedMessages; } }
-        
+        public IEnumerable<ServoVM> Servos => _servos;
+        public IEnumerable<string> ReceivedMessages => _receivedMessages;
+
         #region string SerialPortName (VM property)
         string _serialPortName = "COM6";
-        public string SerialPortName { get { return _serialPortName; } set { SetProperty(ref _serialPortName, value); } }
+        public string SerialPortName
+        {
+            get => _serialPortName;
+            set => SetProperty(ref _serialPortName, value);
+        }
         #endregion
 
         #region string ReceivedMessageIndex (VM property)
         int _receivedMessageIndex = -1;
-        public int ReceivedMessageIndex { get { return _receivedMessageIndex; } set { SetProperty(ref _receivedMessageIndex, value); } }
+        public int ReceivedMessageIndex
+        {
+            get => _receivedMessageIndex;
+            set => SetProperty(ref _receivedMessageIndex, value);
+        }
+        #endregion
+
+        #region bool OutputEnabled (VM property w/ changed)
+        bool _outputEnabled = true;
+        public bool OutputEnabled
+        {
+            get => _outputEnabled;
+            set => SetProperty(ref _outputEnabled, value, OutputEnabledChanged);
+        }
+
         #endregion
 
         public ActionCommand ConnectCommand { get; }
@@ -49,14 +71,24 @@ namespace RobotControl
 
         void MessageReceived(string message)
         {
-            _receivedMessages.Add(message);
+            _receivedMessages.Insert(0, message);
             _receivedMessageIndex = _receivedMessages.Count - 1;
         }
 
-        void ClearMessages(string message)
+        void ClearMessages()
         {
             _receivedMessages.Clear();
             _receivedMessageIndex = -1;
+        }
+
+        void SetServoPosition(Servo servo, float v)
+        {
+            _servoManager.SetServoPosition(servo.ServoIndex, v);
+        }
+
+        void OutputEnabledChanged(bool value)
+        {
+            _servoManager.OutputEnabled = value;
         }
     }
 }

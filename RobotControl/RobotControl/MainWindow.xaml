@@ -5,17 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RobotControl"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="400">
+        Title="MainWindow" Height="450" Width="400" d:DataContext="{d:DesignInstance local:RobotVM}">
     <DockPanel>
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="8,8" HorizontalAlignment="Center">
             <TextBlock>Serial port:</TextBlock>
             <TextBox Width="60" Margin="8,0" Text="{Binding SerialPortName}" />
             <Button Command="{Binding ConnectCommand}">Connect</Button>
+            <CheckBox IsChecked="{Binding OutputEnabled}">Enabled</CheckBox>
         </StackPanel>
         <ItemsControl ItemsSource="{Binding Servos}" HorizontalAlignment="Center" DockPanel.Dock="Top">
             <ItemsControl.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate DataType="local:ServoVM">
                     <StackPanel Orientation="Horizontal" Margin="8,4">
+                        <TextBox Text="{Binding Min}" Width="40" Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding Max}" Width="40" Margin="0,0,8,0"/>
                         <TextBlock Text="{Binding Name}" Width="60" Margin="0,0,8,0"/>
                         <Slider Width="120" Minimum="{Binding Min}" Maximum="{Binding Max}" Value="{Binding Value}" />
                     </StackPanel>
