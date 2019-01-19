@@ -104,7 +104,7 @@ namespace RobotControl
                 var readBuffer = new byte[4096];
                 int readBufferPos = 0;
 
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
 
                 void SendText(string s)
                 {

@@ -11,7 +11,7 @@
             <TextBlock>Serial port:</TextBlock>
             <TextBox Width="60" Margin="8,0" Text="{Binding SerialPortName}" />
             <Button Command="{Binding ConnectCommand}">Connect</Button>
-            <CheckBox IsChecked="{Binding OutputEnabled}">Enabled</CheckBox>
+            <CheckBox IsChecked="{Binding OutputEnabled}" VerticalAlignment="Center" Margin="12,0,0,0">Output Enabled</CheckBox>
         </StackPanel>
         <ItemsControl ItemsSource="{Binding Servos}" HorizontalAlignment="Center" DockPanel.Dock="Top">
             <ItemsControl.ItemTemplate>
