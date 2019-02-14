@@ -1,0 +1,3 @@
+filename = "D:\\Projects\\Git\\ArduinoTinkering\\RobotAnimations\\extractanimations.py"
+
+exec(compile(open(filename).read(), filename, 'exec'))

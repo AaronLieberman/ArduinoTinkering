@@ -35,14 +35,14 @@ namespace RobotControl
         {
             var servos = new[]
             {
-                new {Name = "R Lower", Min = 150, Max = 500, Initial = 330},
-                new {Name = "R Upper", Min = 150, Max = 500, Initial = 320},
-                new {Name = "R Shoulder", Min = 150, Max = 500, Initial = 345},
-                new {Name = "R Torso", Min = 150, Max = 500, Initial = 290},
-                new {Name = "L Lower", Min = 150, Max = 500, Initial = 330},
-                new {Name = "L Upper", Min = 150, Max = 500, Initial = 320},
-                new {Name = "L Shoulder", Min = 150, Max = 500, Initial = 345},
-                new {Name = "L Torso", Min = 150, Max = 500, Initial = 290}
+                new {Name = "Lower.R", Min = 150, Max = 500, Initial = 330},
+                new {Name = "Upper.R", Min = 150, Max = 500, Initial = 320},
+                new {Name = "Shoulder.R", Min = 150, Max = 500, Initial = 345},   
+                new {Name = "Clavicle.R", Min = 150, Max = 500, Initial = 290},
+                new {Name = "Lower.L", Min = 150, Max = 500, Initial = 330},
+                new {Name = "Upper.L", Min = 150, Max = 500, Initial = 320},
+                new {Name = "Shoulder.L", Min = 150, Max = 500, Initial = 345},
+                new {Name = "Clavicle.L", Min = 150, Max = 500, Initial = 290}
             };
 
             using (var state = _state.Lock())

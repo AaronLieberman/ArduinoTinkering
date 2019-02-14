@@ -1,0 +1,316 @@
+Action Dab
+  Frame 0
+    Bone Torso: 0
+    Bone Clavicle.R: 13
+    Bone Shoulder.R: 0
+    Bone Upper.R: 0
+    Bone Lower.R: 90
+    Bone Clavicle.L: 13
+    Bone Shoulder.L: 0
+    Bone Upper.L: 0
+    Bone Lower.L: 90
+  EndFrame
+  Frame 1
+    Bone Clavicle.R: 9
+    Bone Lower.R: 93
+    Bone Clavicle.L: 9
+    Bone Lower.L: 93
+  EndFrame
+  Frame 2
+    Bone Clavicle.R: 1
+    Bone Lower.R: 101
+    Bone Clavicle.L: 1
+    Bone Lower.L: 101
+  EndFrame
+  Frame 3
+    Bone Clavicle.R: 16
+    Bone Lower.R: 110
+    Bone Clavicle.L: 16
+    Bone Lower.L: 110
+  EndFrame
+  Frame 4
+    Bone Clavicle.R: 27
+    Bone Lower.R: 118
+    Bone Clavicle.L: 27
+    Bone Lower.L: 118
+  EndFrame
+  Frame 5
+    Bone Clavicle.R: 31
+    Bone Lower.R: 121
+    Bone Clavicle.L: 31
+    Bone Lower.L: 121
+  EndFrame
+  Frame 6
+    Bone Shoulder.R: 0
+    Bone Upper.R: 1
+    Bone Shoulder.L: 1
+  EndFrame
+  Frame 7
+    Bone Shoulder.R: 1
+    Bone Upper.R: 7
+    Bone Shoulder.L: 8
+  EndFrame
+  Frame 8
+    Bone Shoulder.R: 3
+    Bone Upper.R: 18
+    Bone Shoulder.L: 18
+  EndFrame
+  Frame 9
+    Bone Shoulder.R: 5
+    Bone Upper.R: 32
+    Bone Shoulder.L: 33
+  EndFrame
+  Frame 10
+    Bone Shoulder.R: 7
+    Bone Upper.R: 48
+    Bone Shoulder.L: 51
+  EndFrame
+  Frame 11
+    Bone Clavicle.R: 36
+    Bone Shoulder.R: 10
+    Bone Upper.R: 65
+    Bone Lower.R: 119
+    Bone Shoulder.L: 68
+    Bone Lower.L: 113
+  EndFrame
+  Frame 12
+    Bone Clavicle.R: 50
+    Bone Shoulder.R: 12
+    Bone Upper.R: 79
+    Bone Lower.R: 115
+    Bone Shoulder.L: 83
+    Bone Lower.L: 89
+  EndFrame
+  Frame 13
+    Bone Clavicle.R: 69
+    Bone Shoulder.R: 14
+    Bone Upper.R: 89
+    Bone Lower.R: 109
+    Bone Shoulder.L: 94
+    Bone Lower.L: 66
+  EndFrame
+  Frame 14
+    Bone Clavicle.R: 84
+    Bone Shoulder.R: 15
+    Bone Upper.R: 95
+    Bone Lower.R: 105
+    Bone Shoulder.L: 100
+    Bone Lower.L: 66
+  EndFrame
+  Frame 15
+    Bone Clavicle.R: 89
+    Bone Shoulder.R: 15
+    Bone Upper.R: 97
+    Bone Lower.R: 103
+    Bone Shoulder.L: 102
+    Bone Lower.L: 69
+  EndFrame
+  Frame 16
+  EndFrame
+  Frame 17
+  EndFrame
+  Frame 18
+  EndFrame
+  Frame 19
+  EndFrame
+  Frame 20
+  EndFrame
+  Frame 21
+  EndFrame
+  Frame 22
+  EndFrame
+  Frame 23
+  EndFrame
+  Frame 24
+  EndFrame
+  Frame 25
+  EndFrame
+  Frame 26
+  EndFrame
+  Frame 27
+  EndFrame
+  Frame 28
+  EndFrame
+  Frame 29
+  EndFrame
+  Frame 30
+  EndFrame
+  Frame 31
+    Bone Clavicle.R: 80
+    Bone Shoulder.R: 14
+    Bone Upper.R: 89
+    Bone Lower.R: 102
+    Bone Clavicle.L: 27
+    Bone Shoulder.L: 94
+    Bone Lower.L: 65
+  EndFrame
+  Frame 32
+    Bone Clavicle.R: 55
+    Bone Shoulder.R: 10
+    Bone Upper.R: 65
+    Bone Lower.R: 99
+    Bone Clavicle.L: 16
+    Bone Shoulder.L: 68
+    Bone Lower.L: 58
+  EndFrame
+  Frame 33
+    Bone Clavicle.R: 20
+    Bone Shoulder.R: 5
+    Bone Upper.R: 32
+    Bone Lower.R: 95
+    Bone Clavicle.L: 1
+    Bone Shoulder.L: 33
+    Bone Lower.L: 67
+  EndFrame
+  Frame 34
+    Bone Clavicle.R: 5
+    Bone Shoulder.R: 1
+    Bone Upper.R: 7
+    Bone Lower.R: 91
+    Bone Clavicle.L: 9
+    Bone Shoulder.L: 8
+    Bone Lower.L: 84
+  EndFrame
+  Frame 35
+    Bone Clavicle.R: 13
+    Bone Shoulder.R: 0
+    Bone Upper.R: 0
+    Bone Lower.R: 90
+    Bone Clavicle.L: 13
+    Bone Shoulder.L: 0
+    Bone Lower.L: 90
+  EndFrame
+EndAction
+Action Idle
+  Frame 0
+    Bone Torso: 0
+    Bone Clavicle.R: 13
+    Bone Shoulder.R: 0
+    Bone Upper.R: 0
+    Bone Lower.R: 90
+    Bone Clavicle.L: 13
+    Bone Shoulder.L: 0
+    Bone Upper.L: 0
+    Bone Lower.L: 90
+  EndFrame
+  Frame 1
+  EndFrame
+EndAction
+Action Wave
+  Frame 0
+    Bone Torso: 0
+    Bone Clavicle.R: 13
+    Bone Shoulder.R: 0
+    Bone Upper.R: 0
+    Bone Lower.R: 90
+    Bone Clavicle.L: 13
+    Bone Shoulder.L: 0
+    Bone Upper.L: 0
+    Bone Lower.L: 90
+  EndFrame
+  Frame 1
+    Bone Shoulder.R: 6
+    Bone Upper.R: 7
+  EndFrame
+  Frame 2
+    Bone Shoulder.R: 26
+    Bone Upper.R: 30
+  EndFrame
+  Frame 3
+    Bone Shoulder.R: 53
+    Bone Upper.R: 61
+  EndFrame
+  Frame 4
+    Bone Shoulder.R: 74
+    Bone Upper.R: 83
+  EndFrame
+  Frame 5
+    Bone Shoulder.R: 80
+    Bone Upper.R: 91
+  EndFrame
+  Frame 6
+    Bone Lower.R: 97
+  EndFrame
+  Frame 7
+    Bone Lower.R: 113
+  EndFrame
+  Frame 8
+    Bone Lower.R: 120
+  EndFrame
+  Frame 9
+    Bone Lower.R: 116
+  EndFrame
+  Frame 10
+    Bone Lower.R: 104
+  EndFrame
+  Frame 11
+    Bone Lower.R: 89
+  EndFrame
+  Frame 12
+    Bone Lower.R: 77
+  EndFrame
+  Frame 13
+    Bone Lower.R: 74
+  EndFrame
+  Frame 14
+    Bone Lower.R: 77
+  EndFrame
+  Frame 15
+    Bone Lower.R: 89
+  EndFrame
+  Frame 16
+    Bone Lower.R: 104
+  EndFrame
+  Frame 17
+    Bone Lower.R: 116
+  EndFrame
+  Frame 18
+    Bone Lower.R: 120
+  EndFrame
+  Frame 19
+    Bone Lower.R: 116
+  EndFrame
+  Frame 20
+    Bone Lower.R: 104
+  EndFrame
+  Frame 21
+    Bone Lower.R: 89
+  EndFrame
+  Frame 22
+    Bone Lower.R: 77
+  EndFrame
+  Frame 23
+    Bone Lower.R: 74
+  EndFrame
+  Frame 24
+    Bone Lower.R: 74
+  EndFrame
+  Frame 25
+    Bone Lower.R: 77
+  EndFrame
+  Frame 26
+    Bone Shoulder.R: 74
+    Bone Upper.R: 83
+    Bone Lower.R: 80
+  EndFrame
+  Frame 27
+    Bone Shoulder.R: 53
+    Bone Upper.R: 61
+    Bone Lower.R: 84
+  EndFrame
+  Frame 28
+    Bone Shoulder.R: 26
+    Bone Upper.R: 30
+    Bone Lower.R: 87
+  EndFrame
+  Frame 29
+    Bone Shoulder.R: 6
+    Bone Upper.R: 7
+    Bone Lower.R: 90
+  EndFrame
+  Frame 30
+    Bone Shoulder.R: 0
+    Bone Upper.R: 0
+    Bone Lower.R: 90
+  EndFrame
+EndAction
