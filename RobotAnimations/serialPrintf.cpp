@@ -3,23 +3,11 @@
 
 #include "serialPrintf.h"
 
-int serialPrintfln(char *str, ...)
+static void serialPrintfInternal(const char *str, va_list& argv)
 {
 	const size_t kBufferSize = 256;
-	int count = 0;
 	int flag = 0;
 	char temp[kBufferSize + 1];
- 
-	for (int i = 0; str[i] != '\0'; i++)
-	{
-		if (str[i]=='%')
-		{
-			count++;
-		}
-	}
-
-	va_list argv;
-	va_start(argv, count);
 	
 	int j = 0;
 	for (int i = 0; str[i] != '\0'; i++)
@@ -70,8 +58,22 @@ int serialPrintfln(char *str, ...)
 		temp[j] = '\0';
 		Serial.print(temp);
 	}
+}
 
-	Serial.println();
+void serialPrintf(const char *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  serialPrintfInternal(format, args);
+  va_end(args);
+}
 
-	return count + 1;
+void serialPrintfln(const char *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  serialPrintfInternal(format, args);
+  va_end(args);
+
+  Serial.println();
 }

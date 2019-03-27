@@ -9,17 +9,17 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <functional>
 
 #include "serialPrintf.h"
 #include "Action.h"
 #include "LatchButton.h"
+#include "PeriodicDebug.h"
 #include "animationData.h"
-
-using namespace std;
 
 constexpr int kLightOnCountdownMsec = 500;
 constexpr int kLoopDelay = 50;
-constexpr int kOutputEnablePin = 9;
+constexpr int kOutputEnablePin = A2;
 constexpr int kFps = 30;
 constexpr int kMilliPerFrame = 1000 / kFps;
 
@@ -42,13 +42,15 @@ struct ServoConfig
 
 // 150 (0) -> 400 (90) -> 650 (180)
 //const vector<short> kServoCenter = { 0, 320, 320, 345, 290, 330, 320, 345, 290 };
-const vector<ServoConfig> kServoSpecs = { 
+const std::vector<ServoConfig> kServoSpecs = { 
   ServoConfig(),
   { kServoKy66, 0, false}, { kServoKy66, 90, true}, { kServoKy66, 90, false}, { kServoA0090, 0, false},
   { kServoKy66, 0, false}, { kServoKy66, 90, true}, { kServoKy66, 90, false}, { kServoA0090, 0, false}
 };
-LatchButton leftButton(4, InputPinMode::PullDown);
-LatchButton rightButton(5, InputPinMode::PullDown);
+std::vector<int> _lastServoValues(kServoSpecs.size());
+LatchButton _leftButton(CPLAY_LEFTBUTTON, InputPinMode::PullDown);
+LatchButton _rightButton(CPLAY_RIGHTBUTTON, InputPinMode::PullDown);
+PeriodicDebug _periodicDebug(500, 0);
 
 bool _outputEnable = true;
 int _idleAction = 0;
@@ -56,18 +58,31 @@ int _actionIndex = 0;
 int _frameIndex = 0;
 int _frameCount = 1;
 int _lastFrameMillis = 0;
-  
+
 void setup()
 {
-  Serial.begin(115200);
-  Serial.setTimeout(1);
+  Serial.begin(9600);
+  //while (!Serial) { }
+  delay(200);
+
+  Serial.println("Setting up pins");
+
+  CircuitPlayground.begin();
 
   pinMode(kOutputEnablePin, OUTPUT);
-  leftButton.initialize();
-  rightButton.initialize();
+  digitalWrite(kOutputEnablePin, HIGH); // outputEnable is low when enabled
+
+  //_periodicDebug.initialize();
+  _leftButton.initialize();
+  _rightButton.initialize();
+
+  Serial.println("Starting PWM");
 
   _servoMux.begin();
   _servoMux.setPWMFreq(60);
+  delay(10);
+
+  Serial.println("Loading data");
 
   for (int i = 0; i < kActions.size(); i++)
   {
@@ -79,6 +94,8 @@ void setup()
       break;
     }
   }
+
+  Serial.println("Ready");
 }
 
 static void startAnimation(int actionIndex)
@@ -87,38 +104,53 @@ static void startAnimation(int actionIndex)
   _frameIndex = 0;
   _frameCount = kActions[_actionIndex].frames.size();
   _lastFrameMillis = millis();
-   
+  
   serialPrintfln("starting animation %s (%d frames)", kActions[_actionIndex].name, kActions[_actionIndex].frames.size());
 }
 
-static void advanceFrame(bool rollOver)
+static bool advanceFrame(bool rollOver)
 {
-  _frameIndex = rollOver
-    ? (_frameIndex + 1) % _frameCount
-    : _frameIndex + 1;
+  bool result = false;
+  
+  if (rollOver)
+  {
+    _frameIndex = (_frameIndex + 1) % _frameCount;
+    result = true;
+  }
+  else
+  {
+    if (_frameIndex + 1 < _frameCount)
+    {
+      _frameIndex++;
+      result = true;
+    }
+  }
+
   _lastFrameMillis = millis();
+  return result;
 }
 
 void loop()
 {
-  if (leftButton.getAndClearState())
+  _periodicDebug.update();
+  
+  if (_leftButton.getAndClearState())
   {
     _outputEnable =  !_outputEnable;
     serialPrintfln("output enable -> %s", _outputEnable ? "true" : "false");
   }
 
-  if (rightButton.getAndClearState())
+  if (_rightButton.getAndClearState())
   {
     startAnimation(2); // TODO hardcoded to Wave
   }
 
-  if (_frameIndex >= _frameCount)
+  if (millis() - _lastFrameMillis > kMilliPerFrame)
   {
-    startAnimation(_idleAction);
-  }
-  else if (millis() - _lastFrameMillis > kMilliPerFrame)
-  {
-    advanceFrame(_actionIndex == _idleAction);
+    if (!advanceFrame(_actionIndex == _idleAction))
+    {
+      startAnimation(_idleAction);
+    }
   }
 
   auto& frame = kActions[_actionIndex].frames[_frameIndex];
@@ -130,11 +162,14 @@ void loop()
     float angle = frame.boneAngles[servoIndex] + servoConfig.center;
     angle = servoConfig.flip ? (180 - angle) : angle;
     int pulseLen = (angle / 180) * (spec.pulseMax - spec.pulseMin) + spec.pulseMin;
-    _servoMux.setPWM(servoIndex, 0, pulseLen);
+    
+    if (_lastServoValues[servoIndex] != pulseLen)
+    {
+      _lastServoValues[servoIndex] = pulseLen;
+      _servoMux.setPWM(servoIndex, 0, pulseLen);
+    }
   }
 
-  CircuitPlayground.redLED(_outputEnable);
   digitalWrite(kOutputEnablePin, _outputEnable ? LOW : HIGH); // outputEnable is low when enabled
-
-  delay(10);
+  delay(1);
 }

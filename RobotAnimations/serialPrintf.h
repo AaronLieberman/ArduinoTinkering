@@ -1,3 +1,4 @@
 #pragma once
 
-int serialPrintfln(char *str, ...);
+void serialPrintf(const char *format, ...);
+void serialPrintfln(const char *format, ...);
