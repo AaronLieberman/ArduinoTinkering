@@ -2,7 +2,7 @@
 
 #include "ShiftSharedLedButtonArray.h"
 
-constexpr int kTriggerInterval = 200;
+constexpr int kTriggerInterval = 300;
 
 ShiftSharedLedButtonArray::ShiftSharedLedButtonArray(int shiftLatchPin, int shiftClockPin, int shiftDataPin, int readPin,
 	const std::vector<ShiftSharedLedButtonConfig>& config)
@@ -36,8 +36,6 @@ void ShiftSharedLedButtonArray::setLedState(int ledIndex, bool state)
 
 void ShiftSharedLedButtonArray::applyLedState()
 {
-	Serial.println(_ledState);
-
 	// set the latchPin low so the LEDs don't change while you're sending in bits
 	digitalWrite(_shiftLatchPin, LOW);
 	// shift out the bits

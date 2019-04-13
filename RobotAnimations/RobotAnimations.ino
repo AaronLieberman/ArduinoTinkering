@@ -75,6 +75,7 @@ int _actionIndex = 0;
 int _frameIndex = 0;
 int _frameCount = 1;
 int _lastFrameMillis = 0;
+int _activeButton = -1;
 
 void setup()
 {
@@ -103,28 +104,38 @@ void setup()
 
   Serial.println("Loading data");
 
-  for (int i = 0; i < kActions.size(); i++)
-  {
-    if (strcmp(kActions[i].name, "Idle") == 0)
-    {
-      _idleAction = i;
-      _actionIndex = i;
-      startAnimation(i);
-      break;
-    }
-  }
+  startAnimation("Idle");
+  _idleAction = _actionIndex;
 
   Serial.println("Ready");
 }
 
-static void startAnimation(int actionIndex)
+static void startAnimation(const char* animationName)
 {
-  _actionIndex = actionIndex;
-  _frameIndex = 0;
-  _frameCount = kActions[_actionIndex].frames.size();
-  _lastFrameMillis = millis();
+  _actionIndex = -1;
   
-  serialPrintfln("starting animation %s (%d frames)", kActions[_actionIndex].name, kActions[_actionIndex].frames.size());
+  for (int i = 0; i < kActions.size(); i++)
+  {
+    if (strcmp(kActions[i].name, animationName) == 0)
+    {
+      _actionIndex = i;
+      break;
+    }
+  }
+
+  _frameIndex = 0;
+
+  if (_actionIndex != -1)
+  {
+    _frameCount = kActions[_actionIndex].frames.size();
+    serialPrintfln("starting animation %s (%d frames)", kActions[_actionIndex].name, kActions[_actionIndex].frames.size());
+  }
+  else
+  {
+    serialPrintfln("couldn't find an animation named %s", animationName);
+  }
+
+  _lastFrameMillis = millis();
 }
 
 static bool advanceFrame(bool rollOver)
@@ -161,46 +172,62 @@ void loop()
 
   if (_rightButton.getAndClearState())
   {
-    startAnimation(2); // TODO hardcoded to Wave
+    startAnimation("Wave");
   }
 
   if (millis() - _lastFrameMillis > kMilliPerFrame)
   {
     if (!advanceFrame(_actionIndex == _idleAction))
     {
-      startAnimation(_idleAction);
+      startAnimation("Idle");
+      _activeButton = -1;
     }
   }
 
-  auto& frame = kActions[_actionIndex].frames[_frameIndex];
-
-  for (int servoIndex = 0; servoIndex < kServoSpecs.size(); servoIndex++)
+  if (_actionIndex != -1)
   {
-    auto& servoConfig = kServoSpecs[servoIndex];
-    auto& spec = servoConfig.spec;
-    float angle = frame.boneAngles[servoIndex] + servoConfig.center;
-    angle = servoConfig.flip ? (180 - angle) : angle;
-    int pulseLen = (angle / 180) * (spec.pulseMax - spec.pulseMin) + spec.pulseMin;
-    
-    if (_lastServoValues[servoIndex] != pulseLen)
+    auto& frame = kActions[_actionIndex].frames[_frameIndex];
+  
+    for (int servoIndex = 0; servoIndex < kServoSpecs.size(); servoIndex++)
     {
-      _lastServoValues[servoIndex] = pulseLen;
-#ifdef ENABLE_SERVOS
-      _servoMux.setPWM(servoIndex, 0, pulseLen);
-#endif
+      auto& servoConfig = kServoSpecs[servoIndex];
+      auto& spec = servoConfig.spec;
+      float angle = frame.boneAngles[servoIndex] + servoConfig.center;
+      angle = servoConfig.flip ? (180 - angle) : angle;
+      int pulseLen = (angle / 180) * (spec.pulseMax - spec.pulseMin) + spec.pulseMin;
+      
+      if (_lastServoValues[servoIndex] != pulseLen)
+      {
+        _lastServoValues[servoIndex] = pulseLen;
+  #ifdef ENABLE_SERVOS
+        _servoMux.setPWM(servoIndex, 0, pulseLen);
+  #endif
+      }
     }
   }
 
   digitalWrite(kOutputEnablePin, _outputEnable ? LOW : HIGH); // outputEnable is low when enabled
-  delay(1);
 
   int buttonDownIndex = _buttons.getButtonDown();
   if (buttonDownIndex != -1)
   {
-    serialPrintfln("button %d down", buttonDownIndex);
+    switch (buttonDownIndex)
+    {
+      case 0: startAnimation("Wave"); break;
+      case 1: startAnimation("Dab"); break;
+      case 2: startAnimation("Unknown1"); break;
+      case 3: startAnimation("Unknown2"); break;
+    }
 
-    _buttons.clearLedState();
-    _buttons.setLedState(buttonDownIndex, true);
-    _buttons.applyLedState();
+    _activeButton = buttonDownIndex;
   }
+
+  _buttons.clearLedState();
+  if (_activeButton != -1)
+  {
+    _buttons.setLedState(_activeButton, true);
+  }
+  _buttons.applyLedState();
+
+  delay(1);
 }
