@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Scheduler.h>
 #include <Stepper.h>
 #include <Adafruit_NeoPixel.h>
 
@@ -8,10 +7,15 @@ const int kStepperA2 = 9;
 const int kStepperB1 = 11;
 const int kStepperB2 = 10;
 const int kNeoPixelsPin = 4;
-const int kNumberOfNeoPixels = 4;
+const int kNumberOfPixels = 10;
 
 Stepper motor(512, kStepperA1, kStepperA2, kStepperB1, kStepperB2);  
-Adafruit_NeoPixel pixels(kNumberOfNeoPixels, kNeoPixelsPin, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels(kNumberOfPixels, kNeoPixelsPin, NEO_GRB + NEO_KHZ800);
+
+uint32_t _currentColors[kNumberOfPixels] = {};
+uint32_t _targetColors[kNumberOfPixels] = {};
+
+int _motorLoc = 0;
 
 void setup()
 {
@@ -24,32 +28,18 @@ void setup()
 
   pixels.begin();
   pixels.clear();
-  motor.setSpeed(10);
+  motor.setSpeed(20);
 
-  Scheduler.startLoop(loop2);
-//  OCR0A = 0xAF;
-//  TIMSK0 |= _BV(OCIE0A);
+  generateColors(_currentColors, kNumberOfPixels);
+  generateColors(_targetColors, kNumberOfPixels);
 }
 
-//bool _ledOn = false;
-//int _millisTillNextUpdate = 0;
-//SIGNAL(TIMER0_COMPA_vect)
-//{
-//  if (_millisTillNextUpdate <= 0)
-//  {
-//    _ledOn = !_ledOn;
-//    digitalWrite(LED_BUILTIN, _ledOn);
-//  }
-//  
-//  _millisTillNextUpdate--;
-//}
-
-void loop2()
+void generateColors(uint32_t colors[], int count)
 {
-  static bool ledOn = false;
-  ledOn = !ledOn;
-  digitalWrite(LED_BUILTIN, ledOn);
-  delay(500);
+  for (int i = 0; i < count; i++)
+  {
+    colors[i] = pixels.Color(random(0, 16) * random(0, 16), random(0, 16) * random(0, 16), random(0, 16) * random(0, 16));
+  }  
 }
 
 void rot(int deg)
@@ -57,39 +47,58 @@ void rot(int deg)
   motor.step((float)deg / 360 * 200);
 }
 
+void rotTo(int deg)
+{
+  rot(deg - _motorLoc);
+  _motorLoc = deg;
+}
+
+uint32_t blendComponent(uint32_t color1, uint32_t color2, int shift, float f)
+{
+  uint8_t c1 = (uint8_t)(color1 >> shift);
+  uint8_t c2 = (uint8_t)(color2 >> shift);
+  uint8_t r = (uint8_t)((float)c1 * f + (float)c2 * (1.0f - f));
+  return r << shift;
+}
+
+void applyColors()
+{
+  float f = 0.95f;
+  for (int i = 0; i < kNumberOfPixels; i++)
+  {
+    _currentColors[i] =
+      blendComponent(_currentColors[i], _targetColors[i], 16, f) |
+      blendComponent(_currentColors[i], _targetColors[i], 8, f) |
+      blendComponent(_currentColors[i], _targetColors[i], 0, f);
+
+    pixels.setPixelColor(i, _currentColors[i]);
+  }
+
+  pixels.show();
+  Serial.println((uint8_t)(_currentColors[0] >> 16));
+}
+
 void play1()
 {
-  rot(45);
-  pixels.setPixelColor(0, pixels.Color(255, 255, 255));
-  pixels.show();
-  rot(-90);
-  pixels.setPixelColor(1, pixels.Color(0, 150, 0));
-  pixels.show();
-  rot(90);
-  pixels.setPixelColor(2, pixels.Color(0, 150, 0));
-  pixels.show();
-  rot(-90);
-  pixels.setPixelColor(3, pixels.Color(0, 150, 0));
-  pixels.show();
-  rot(45);
-  pixels.clear();
-  pixels.show();
+  rotTo(random(-75, 75));
+}
+
+void play2()
+{
+  for (int i = 0; i < 100; i++)
+  {
+    applyColors();
+    delay(3);
+  }
+
+  generateColors(_targetColors, kNumberOfPixels);
 }
 
 void loop()
 {
-  if (Serial.available())
-  {
-    int steps = Serial.parseInt();
-
-    if (steps == 1)
-    {
-      play1();
-    }
-    else
-    {
-      motor.step(steps);
-      Serial.println(steps);
-    }
-  }
+  play1();
+  play2();
+  
+  //delay(random(400, 2000));
 }
+
