@@ -30,13 +30,21 @@ void setup()
   pixels.clear();
   motor.setSpeed(20);
 
-  generateColors(_currentColors, kNumberOfPixels);
-  generateColors(_targetColors, kNumberOfPixels);
+  generateColors(_currentColors);
+  generateColors(_targetColors);
+
+  delay(1000);
 }
 
-void generateColors(uint32_t colors[], int count)
+void generateColors(uint32_t colors[])
 {
-  for (int i = 0; i < count; i++)
+  for (int i = 0; i < 4; i++)
+  {
+    uint8_t c = 255;
+    colors[i] = pixels.Color(c, c, c);
+  }
+  
+  for (int i = 4; i < kNumberOfPixels; i++)
   {
     colors[i] = pixels.Color(random(0, 16) * random(0, 16), random(0, 16) * random(0, 16), random(0, 16) * random(0, 16));
   }  
@@ -51,6 +59,7 @@ void rotTo(int deg)
 {
   rot(deg - _motorLoc);
   _motorLoc = deg;
+  Serial.println(_motorLoc);
 }
 
 uint32_t blendComponent(uint32_t color1, uint32_t color2, int shift, float f)
@@ -75,12 +84,14 @@ void applyColors()
   }
 
   pixels.show();
-  Serial.println((uint8_t)(_currentColors[0] >> 16));
 }
 
 void play1()
 {
   rotTo(random(-75, 75));
+//  static bool flipped = false;
+//  rotTo(flipped ? -75 : 75);
+//  flipped = !flipped;
 }
 
 void play2()
@@ -91,7 +102,7 @@ void play2()
     delay(3);
   }
 
-  generateColors(_targetColors, kNumberOfPixels);
+  generateColors(_targetColors);
 }
 
 void loop()
@@ -99,6 +110,7 @@ void loop()
   play1();
   play2();
   
+  //delay(3000);
   //delay(random(400, 2000));
 }
 
