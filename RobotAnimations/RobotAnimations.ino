@@ -52,8 +52,8 @@ struct ServoConfig
 //const vector<short> kServoCenter = { 0, 320, 320, 345, 290, 330, 320, 345, 290 };
 const std::vector<ServoConfig> kServoSpecs = { 
   { { 0, 0 }, 0, false},
-  { kServoKy66, 0, false}, { kServoKy66, 90, true}, { kServoKy66, 90, false}, { kServoA0090, 0, false},
-  { kServoKy66, 0, false}, { kServoKy66, 90, true}, { kServoKy66, 90, false}, { kServoA0090, 0, false}
+  { kServoKy66, 90, true}, { kServoKy66, 90, true}, { kServoKy66, 90, true}, { kServoA0090, 0, false},
+  { kServoKy66, 90, false}, { kServoKy66, 90, false}, { kServoKy66, 90, false}, { kServoA0090, 0, false}
 };
 std::vector<int> _lastServoValues(kServoSpecs.size());
 LatchButton _leftButton(CPLAY_LEFTBUTTON, InputPinMode::PullDown);
@@ -96,7 +96,7 @@ void setup()
   Serial.println("Starting PWM");
   Serial.println("(if this doesn't continue, maybe the servo board is unplugged?)");
 
-#if ENABLE_SERVOS
+#ifdef ENABLE_SERVOS
   _servoMux.begin();
   _servoMux.setPWMFreq(60);
   delay(10);
@@ -170,11 +170,6 @@ void loop()
     serialPrintfln("output enable -> %s", _outputEnable ? "true" : "false");
   }
 
-  if (_rightButton.getAndClearState())
-  {
-    startAnimation("Wave");
-  }
-
   if (millis() - _lastFrameMillis > kMilliPerFrame)
   {
     if (!advanceFrame(_actionIndex == _idleAction))
@@ -187,7 +182,7 @@ void loop()
   if (_actionIndex != -1)
   {
     auto& frame = kActions[_actionIndex].frames[_frameIndex];
-  
+
     for (int servoIndex = 0; servoIndex < kServoSpecs.size(); servoIndex++)
     {
       auto& servoConfig = kServoSpecs[servoIndex];
@@ -199,9 +194,9 @@ void loop()
       if (_lastServoValues[servoIndex] != pulseLen)
       {
         _lastServoValues[servoIndex] = pulseLen;
-  #ifdef ENABLE_SERVOS
+#ifdef ENABLE_SERVOS
         _servoMux.setPWM(servoIndex, 0, pulseLen);
-  #endif
+#endif
       }
     }
   }
