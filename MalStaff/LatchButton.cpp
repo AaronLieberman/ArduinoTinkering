@@ -6,7 +6,7 @@ LatchButton::LatchButton(int buttonPin) : _buttonPin(buttonPin) {}
 
 void LatchButton::initialize()
 {
-	pinMode(_buttonPin, INPUT);
+	pinMode(_buttonPin, INPUT_PULLDOWN);
 }
 
 bool LatchButton::getAndClearState()

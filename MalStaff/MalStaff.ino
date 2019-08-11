@@ -10,61 +10,56 @@
 
 const int kNumNeoPixels = 10;
 
-const int kSwitchPin = 4;
-
-LatchButton switchButton(kSwitchPin);
-bool powerOn = true;
+LatchButton _buttonLeft(4);
+LatchButton _buttonRight(5);
 
 AveragingFilter _filterX(10);
 AveragingFilter _filterY(10);
 AveragingFilter _filterZ(10);
+
+bool _isActive = true;
 
 void setup()
 {
   CircuitPlayground.begin();
   Serial.begin(115200);
 
-  CircuitPlayground.setAccelTap(2, 120);
-  attachInterrupt(digitalPinToInterrupt(CPLAY_LIS3DH_INTERRUPT), accelTapped, RISING);
-  
-	switchButton.initialize();
-}
+	_buttonLeft.initialize();
+  _buttonRight.initialize();
 
-void accelTapped(void)
-{
-  powerOn = !powerOn;
+  serialPrintfln("Setup complete");
 }
 
 void loop()
 {
-	if (switchButton.getAndClearState())
-	{
-		powerOn = !powerOn;
-	}
+  if (_buttonLeft.getAndClearState())
+  {
+    _isActive = !_isActive;
+  }
 
-	if (powerOn)
-	{
-    float brightness = CircuitPlayground.slideSwitch() ? 255 : 12;
-
+  if (_isActive)
+  {
+    float brightness = CircuitPlayground.slideSwitch() ? 1.f : 0.25f;
+  
     auto x = CircuitPlayground.motionX();
     auto y = CircuitPlayground.motionY();
     auto z = CircuitPlayground.motionZ();
     auto fx = _filterX.addSample(x);
     auto fy = _filterY.addSample(y);
     auto fz = _filterZ.addSample(z);
-
+  
     //serialPrintfln("%f, %f, %f", x, y, z);
     //serialPrintfln("%f, %f, %f", fx, fy, fz);
-
+  
     bool active = fz < 0 || (abs(fz) < 3 && sqrt(fx * fx + fy * fy) > 6);
-
+  
     uint32_t color = 0;
-
+  
     if (!active)
     {
       float glowScale = sin((float)millis() / 1000 * PI) * 0.3f + 0.7f;
       brightness *= glowScale;
-
+  
       color = 0x4000ff;
     }
     else
@@ -75,18 +70,18 @@ void loop()
       
       color = (uint8_t)(r * 255) << 16 | (uint8_t)(g * 255) << 8 | (uint8_t)(b * 255);
     }
-
-    CircuitPlayground.setBrightness(brightness);
-
-		for (int i = 0; i < kNumNeoPixels; i++)
-		{
+  
+    CircuitPlayground.setBrightness(brightness * 255);
+  
+  	for (int i = 0; i < kNumNeoPixels; i++)
+  	{
       CircuitPlayground.setPixelColor(i, color);
-		}
-	}
-	else
-	{
-		CircuitPlayground.clearPixels();
-	}
+  	}
+  }
+  else
+  {
+    CircuitPlayground.clearPixels();
+  }
 
   delay(10);
 }
