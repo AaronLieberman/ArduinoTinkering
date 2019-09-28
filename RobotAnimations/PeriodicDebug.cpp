@@ -1,6 +1,6 @@
-#include <Arduino.h>
-
 #include "PeriodicDebug.h"
+
+#include <Arduino.h>
 
 PeriodicDebug::PeriodicDebug(int blinkInterval, int logInterval)
 	: _blinkInterval(blinkInterval)

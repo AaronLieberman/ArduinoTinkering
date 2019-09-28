@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <stdarg.h>
 
-#include "serialPrintf.h"
+#include "SerialPrintf.h"
 
 static void serialPrintfInternal(const char* str, va_list& argv)
 {

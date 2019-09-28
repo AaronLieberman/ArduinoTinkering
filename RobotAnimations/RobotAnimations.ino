@@ -1,9 +1,8 @@
-#include <Adafruit_CircuitPlayground.h>
-#include <Adafruit_PWMServoDriver.h>
 #include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+#include <Adafruit_CircuitPlayground.h>
 
 #include "stlhelper.h"
-
 #include <functional>
 #include <memory>
 #include <string>
@@ -12,11 +11,12 @@
 #include "Action.h"
 #include "LatchButton.h"
 #include "PeriodicDebug.h"
+#include "ServoController.h"
 #include "ShiftSharedLedButtonArray.h"
-#include "animationData.h"
-#include "serialPrintf.h"
+#include "SerialPrintf.h"
 
-#define ENABLE_SERVOS
+#include "animationData.h"
+#include "servoConfig.h"
 
 constexpr int kShiftLatchPin = A1; // 74HC595 ST_CP
 constexpr int kShiftClockPin = A2; // 74HC595 SH_CP
@@ -29,34 +29,8 @@ constexpr int kLoopDelay = 50;
 constexpr int kFps = 30;
 constexpr int kMilliPerFrame = 1000 / kFps;
 
-#ifdef ENABLE_SERVOS
-auto _servoMux = Adafruit_PWMServoDriver();
-#endif
+ServoController _servoController(kServoSpecs);
 
-struct ServoSpec
-{
-	int pulseMin;
-	int pulseMax;
-};
-const ServoSpec kServoA0090 = {150, 650};
-const ServoSpec kServoKy66 = {150, 520};
-
-struct ServoConfig
-{
-	ServoSpec spec;
-	int center;
-	bool flip;
-};
-
-// clang-format off
-// 150 (0) -> 400 (90) -> 650 (180)
-// const vector<short> kServoCenter = {0, 320, 320, 345, 290, 330, 320, 345, 290};
-const std::vector<ServoConfig> kServoSpecs = {{{0, 0}, 0, false},
-//	1							2							3							4
-	{kServoKy66, 90, true},		{kServoKy66, 90, true},		{kServoKy66, 90, true},		{kServoA0090, 0, false},
-	{kServoKy66, 90, false},	{kServoKy66, 90, false},	{kServoKy66, 90, false},	{kServoA0090, 0, false}};
-// clang-format on
-std::vector<int> _lastServoValues(kServoSpecs.size());
 LatchButton _leftButton(CPLAY_LEFTBUTTON, InputPinMode::PullDown);
 LatchButton _rightButton(CPLAY_RIGHTBUTTON, InputPinMode::PullDown);
 
@@ -97,11 +71,8 @@ void setup()
 	Serial.println("Starting PWM");
 	Serial.println("(if this doesn't continue, maybe the servo board is unplugged?)");
 
-#ifdef ENABLE_SERVOS
-	_servoMux.begin();
-	_servoMux.setPWMFreq(60);
+	_servoController.initialize();
 	delay(10);
-#endif
 
 	Serial.println("Loading data");
 
@@ -185,21 +156,9 @@ void loop()
 	{
 		auto& frame = kActions[_actionIndex].frames[_frameIndex];
 
-		for (int servoIndex = 0; servoIndex < kServoSpecs.size(); servoIndex++)
+		for (int servoIndex = 0; servoIndex < _servoController.getServoCount(); servoIndex++)
 		{
-			auto& servoConfig = kServoSpecs[servoIndex];
-			auto& spec = servoConfig.spec;
-			float angle = frame.boneAngles[servoIndex] + servoConfig.center;
-			angle = servoConfig.flip ? (180 - angle) : angle;
-			int pulseLen = (angle / 180) * (spec.pulseMax - spec.pulseMin) + spec.pulseMin;
-
-			if (_lastServoValues[servoIndex] != pulseLen)
-			{
-				_lastServoValues[servoIndex] = pulseLen;
-#ifdef ENABLE_SERVOS
-				_servoMux.setPWM(servoIndex, 0, pulseLen);
-#endif
-			}
+			_servoController.setPosition(servoIndex, frame.boneAngles[servoIndex]);
 		}
 	}
 

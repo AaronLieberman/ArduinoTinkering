@@ -49,7 +49,7 @@ IncludeCategories:
     Priority:        10
   - Regex:           '.*'
     Priority:        5
-SortIncludes: true
+SortIncludes: false
 AllowShortFunctionsOnASingleLine: InlineOnly
 BreakConstructorInitializers: BeforeComma
 ReflowComments: true
