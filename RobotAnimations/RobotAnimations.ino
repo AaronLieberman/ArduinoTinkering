@@ -1,26 +1,26 @@
-#include <Wire.h>
-#include <Adafruit_PWMServoDriver.h>
 #include <Adafruit_CircuitPlayground.h>
+#include <Adafruit_PWMServoDriver.h>
+#include <Wire.h>
 
 #include "stlhelper.h"
 
-#include <memory>
-#include <vector>
-#include <string>
 #include <functional>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "serialPrintf.h"
 #include "Action.h"
 #include "LatchButton.h"
 #include "PeriodicDebug.h"
-#include "animationData.h"
 #include "ShiftSharedLedButtonArray.h"
+#include "animationData.h"
+#include "serialPrintf.h"
 
 #define ENABLE_SERVOS
 
 constexpr int kShiftLatchPin = A1; // 74HC595 ST_CP
 constexpr int kShiftClockPin = A2; // 74HC595 SH_CP
-constexpr int kShiftDataPin = A7; // 74HC595 DS
+constexpr int kShiftDataPin = A7;  // 74HC595 DS
 constexpr int kReadButtonsPin = A3;
 constexpr int kOutputEnablePin = A6;
 
@@ -35,35 +35,36 @@ auto _servoMux = Adafruit_PWMServoDriver();
 
 struct ServoSpec
 {
-  int pulseMin;
-  int pulseMax;
+	int pulseMin;
+	int pulseMax;
 };
-const ServoSpec kServoA0090 = { 150, 650 };
-const ServoSpec kServoKy66 = { 150, 520 };
+const ServoSpec kServoA0090 = {150, 650};
+const ServoSpec kServoKy66 = {150, 520};
 
 struct ServoConfig
 {
-  ServoSpec spec;
-  int center;
-  bool flip;
+	ServoSpec spec;
+	int center;
+	bool flip;
 };
 
+// clang-format off
 // 150 (0) -> 400 (90) -> 650 (180)
-//const vector<short> kServoCenter = { 0, 320, 320, 345, 290, 330, 320, 345, 290 };
-const std::vector<ServoConfig> kServoSpecs = { 
-  { { 0, 0 }, 0, false},
-  { kServoKy66, 90, true}, { kServoKy66, 90, true}, { kServoKy66, 90, true}, { kServoA0090, 0, false},
-  { kServoKy66, 90, false}, { kServoKy66, 90, false}, { kServoKy66, 90, false}, { kServoA0090, 0, false}
-};
+// const vector<short> kServoCenter = {0, 320, 320, 345, 290, 330, 320, 345, 290};
+const std::vector<ServoConfig> kServoSpecs = {{{0, 0}, 0, false},
+//	1							2							3							4
+	{kServoKy66, 90, true},		{kServoKy66, 90, true},		{kServoKy66, 90, true},		{kServoA0090, 0, false},
+	{kServoKy66, 90, false},	{kServoKy66, 90, false},	{kServoKy66, 90, false},	{kServoA0090, 0, false}};
+// clang-format on
 std::vector<int> _lastServoValues(kServoSpecs.size());
 LatchButton _leftButton(CPLAY_LEFTBUTTON, InputPinMode::PullDown);
 LatchButton _rightButton(CPLAY_RIGHTBUTTON, InputPinMode::PullDown);
 
 const std::vector<ShiftSharedLedButtonConfig> kButtonSpecs = {
-  { 992, 995, 4},
-  { 1017, 1019, 5 },
-  { 1023, 1023, 6 },
-  { 943, 947, 7 },
+	{992, 995, 4},
+	{1017, 1019, 5},
+	{1023, 1023, 6},
+	{943, 947, 7},
 };
 ShiftSharedLedButtonArray _buttons(kShiftLatchPin, kShiftClockPin, kShiftDataPin, kReadButtonsPin, kButtonSpecs);
 
@@ -79,150 +80,151 @@ int _activeButton = -1;
 
 void setup()
 {
-  CircuitPlayground.begin();
+	CircuitPlayground.begin();
 
-  Serial.begin(9600);
+	Serial.begin(9600);
 
-  Serial.println("Setting up pins");
+	Serial.println("Setting up pins");
 
-  pinMode(kOutputEnablePin, OUTPUT);
-  digitalWrite(kOutputEnablePin, HIGH); // outputEnable is low when enabled
+	pinMode(kOutputEnablePin, OUTPUT);
+	digitalWrite(kOutputEnablePin, HIGH); // outputEnable is low when enabled
 
-  _periodicDebug.initialize();
-  _leftButton.initialize();
-  _rightButton.initialize();
-  _buttons.initialize();
+	_periodicDebug.initialize();
+	_leftButton.initialize();
+	_rightButton.initialize();
+	_buttons.initialize();
 
-  Serial.println("Starting PWM");
-  Serial.println("(if this doesn't continue, maybe the servo board is unplugged?)");
+	Serial.println("Starting PWM");
+	Serial.println("(if this doesn't continue, maybe the servo board is unplugged?)");
 
 #ifdef ENABLE_SERVOS
-  _servoMux.begin();
-  _servoMux.setPWMFreq(60);
-  delay(10);
+	_servoMux.begin();
+	_servoMux.setPWMFreq(60);
+	delay(10);
 #endif
 
-  Serial.println("Loading data");
+	Serial.println("Loading data");
 
-  startAnimation("Idle");
-  _idleAction = _actionIndex;
+	startAnimation("Idle");
+	_idleAction = _actionIndex;
 
-  Serial.println("Ready");
+	Serial.println("Ready");
 }
 
 static void startAnimation(const char* animationName)
 {
-  _actionIndex = -1;
-  
-  for (int i = 0; i < kActions.size(); i++)
-  {
-    if (strcmp(kActions[i].name, animationName) == 0)
-    {
-      _actionIndex = i;
-      break;
-    }
-  }
+	_actionIndex = -1;
 
-  _frameIndex = 0;
+	for (int i = 0; i < kActions.size(); i++)
+	{
+		if (strcmp(kActions[i].name, animationName) == 0)
+		{
+			_actionIndex = i;
+			break;
+		}
+	}
 
-  if (_actionIndex != -1)
-  {
-    _frameCount = kActions[_actionIndex].frames.size();
-    serialPrintfln("starting animation %s (%d frames)", kActions[_actionIndex].name, kActions[_actionIndex].frames.size());
-  }
-  else
-  {
-    serialPrintfln("couldn't find an animation named %s", animationName);
-  }
+	_frameIndex = 0;
 
-  _lastFrameMillis = millis();
+	if (_actionIndex != -1)
+	{
+		_frameCount = kActions[_actionIndex].frames.size();
+		serialPrintfln(
+			"starting animation %s (%d frames)", kActions[_actionIndex].name, kActions[_actionIndex].frames.size());
+	}
+	else
+	{
+		serialPrintfln("couldn't find an animation named %s", animationName);
+	}
+
+	_lastFrameMillis = millis();
 }
 
 static bool advanceFrame(bool rollOver)
 {
-  bool result = false;
-  
-  if (rollOver)
-  {
-    _frameIndex = (_frameIndex + 1) % _frameCount;
-    result = true;
-  }
-  else
-  {
-    if (_frameIndex + 1 < _frameCount)
-    {
-      _frameIndex++;
-      result = true;
-    }
-  }
+	bool result = false;
 
-  _lastFrameMillis = millis();
-  return result;
+	if (rollOver)
+	{
+		_frameIndex = (_frameIndex + 1) % _frameCount;
+		result = true;
+	}
+	else
+	{
+		if (_frameIndex + 1 < _frameCount)
+		{
+			_frameIndex++;
+			result = true;
+		}
+	}
+
+	_lastFrameMillis = millis();
+	return result;
 }
 
 void loop()
 {
-  _periodicDebug.update();
-  
-  if (_leftButton.getAndClearState())
-  {
-    _outputEnable =  !_outputEnable;
-    serialPrintfln("output enable -> %s", _outputEnable ? "true" : "false");
-  }
+	_periodicDebug.update();
 
-  if (millis() - _lastFrameMillis > kMilliPerFrame)
-  {
-    if (!advanceFrame(_actionIndex == _idleAction))
-    {
-      startAnimation("Idle");
-      _activeButton = -1;
-    }
-  }
+	if (_leftButton.getAndClearState())
+	{
+		_outputEnable = !_outputEnable;
+		serialPrintfln("output enable -> %s", _outputEnable ? "true" : "false");
+	}
 
-  if (_actionIndex != -1)
-  {
-    auto& frame = kActions[_actionIndex].frames[_frameIndex];
+	if (millis() - _lastFrameMillis > kMilliPerFrame)
+	{
+		if (!advanceFrame(_actionIndex == _idleAction))
+		{
+			startAnimation("Idle");
+			_activeButton = -1;
+		}
+	}
 
-    for (int servoIndex = 0; servoIndex < kServoSpecs.size(); servoIndex++)
-    {
-      auto& servoConfig = kServoSpecs[servoIndex];
-      auto& spec = servoConfig.spec;
-      float angle = frame.boneAngles[servoIndex] + servoConfig.center;
-      angle = servoConfig.flip ? (180 - angle) : angle;
-      int pulseLen = (angle / 180) * (spec.pulseMax - spec.pulseMin) + spec.pulseMin;
-      
-      if (_lastServoValues[servoIndex] != pulseLen)
-      {
-        _lastServoValues[servoIndex] = pulseLen;
+	if (_actionIndex != -1)
+	{
+		auto& frame = kActions[_actionIndex].frames[_frameIndex];
+
+		for (int servoIndex = 0; servoIndex < kServoSpecs.size(); servoIndex++)
+		{
+			auto& servoConfig = kServoSpecs[servoIndex];
+			auto& spec = servoConfig.spec;
+			float angle = frame.boneAngles[servoIndex] + servoConfig.center;
+			angle = servoConfig.flip ? (180 - angle) : angle;
+			int pulseLen = (angle / 180) * (spec.pulseMax - spec.pulseMin) + spec.pulseMin;
+
+			if (_lastServoValues[servoIndex] != pulseLen)
+			{
+				_lastServoValues[servoIndex] = pulseLen;
 #ifdef ENABLE_SERVOS
-        _servoMux.setPWM(servoIndex, 0, pulseLen);
+				_servoMux.setPWM(servoIndex, 0, pulseLen);
 #endif
-      }
-    }
-  }
+			}
+		}
+	}
 
-  digitalWrite(kOutputEnablePin, _outputEnable ? LOW : HIGH); // outputEnable is low when enabled
+	digitalWrite(kOutputEnablePin, _outputEnable ? LOW : HIGH); // outputEnable is low when enabled
 
-  int buttonDownIndex = _buttons.getButtonDown();
-  if (buttonDownIndex != -1)
-  {
-    switch (buttonDownIndex)
-    {
-      case 0: startAnimation("Wave"); break;
-      case 1: startAnimation("Dab"); break;
-      case 2: startAnimation("Unknown1"); break;
-      case 3: startAnimation("Unknown2"); break;
-    }
+	int buttonDownIndex = _buttons.getButtonDown();
+	if (buttonDownIndex != -1)
+	{
+		switch (buttonDownIndex)
+		{
+			case 0: startAnimation("Wave"); break;
+			case 1: startAnimation("Dab"); break;
+			case 2: startAnimation("Unknown1"); break;
+			case 3: startAnimation("Unknown2"); break;
+		}
 
-    _activeButton = buttonDownIndex;
-  }
+		_activeButton = buttonDownIndex;
+	}
 
-  _buttons.clearLedState();
-  if (_activeButton != -1)
-  {
-    _buttons.setLedState(_activeButton, true);
-  }
-  _buttons.applyLedState();
+	_buttons.clearLedState();
+	if (_activeButton != -1)
+	{
+		_buttons.setLedState(_activeButton, true);
+	}
+	_buttons.applyLedState();
 
-  delay(1);
+	delay(1);
 }

@@ -20,8 +20,7 @@ bool LatchButton::getAndClearState()
 
 	if (digitalRead(_buttonPin) == HIGH)
 	{
-		if (!_buttonLatched && 
-			(_latchInterval == 0 || ((millis() - _lastLatched) >= _latchInterval)))
+		if (!_buttonLatched && (_latchInterval == 0 || ((millis() - _lastLatched) >= _latchInterval)))
 		{
 			_buttonLatched = true;
 			result = true;

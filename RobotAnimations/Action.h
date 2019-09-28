@@ -4,6 +4,6 @@
 
 struct Action
 {
-  const char* name;
-  std::vector<Frame> frames;
+	const char* name;
+	std::vector<Frame> frames;
 };

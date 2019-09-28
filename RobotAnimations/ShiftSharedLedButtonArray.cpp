@@ -4,8 +4,8 @@
 
 constexpr int kTriggerInterval = 300;
 
-ShiftSharedLedButtonArray::ShiftSharedLedButtonArray(int shiftLatchPin, int shiftClockPin, int shiftDataPin, int readPin,
-	const std::vector<ShiftSharedLedButtonConfig>& config)
+ShiftSharedLedButtonArray::ShiftSharedLedButtonArray(int shiftLatchPin, int shiftClockPin, int shiftDataPin,
+	int readPin, const std::vector<ShiftSharedLedButtonConfig>& config)
 	: _shiftLatchPin(shiftLatchPin)
 	, _shiftClockPin(shiftClockPin)
 	, _shiftDataPin(shiftDataPin)
@@ -54,7 +54,7 @@ int ShiftSharedLedButtonArray::getButtonDown()
 
 	int result = -1;
 	int readValue = analogRead(_readPin);
-	
+
 	for (int i = 0; i < _config.size(); i++)
 	{
 		if (readValue >= _config[i].readLow && readValue <= _config[i].readHigh)
