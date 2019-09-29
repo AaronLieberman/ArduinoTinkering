@@ -18,7 +18,7 @@
 #include "servoConfig.h"
 
 #define WAIT_ON_SERIAL
-#define SETUP_MODE
+//#define SETUP_MODE
 
 constexpr int kShiftLatchPin = A1; // 74HC595 ST_CP
 constexpr int kShiftClockPin = A2; // 74HC595 SH_CP

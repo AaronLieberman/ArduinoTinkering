@@ -20,6 +20,8 @@ if filePath.is_dir():
 with filePath.open("w") as outFile:
 	outFile.write("#pragma once\n")
 	outFile.write("\n")
+	outFile.write("#include \"Action.h\"\n")
+	outFile.write("\n")
 	outFile.write("const std::vector<Action> kActions = {\n")
 
 	for act in bpy.data.actions:
@@ -38,7 +40,7 @@ with filePath.open("w") as outFile:
 				.format(index = frameIndex))
 
 			for pbone in arma.pose.bones:
-				angle = degrees(pbone.rotation_quaternion.angle)
+				angle = degrees(pbone.rotation_euler.x + pbone.rotation_euler.y + pbone.rotation_euler.z)
 				
 				outFile.write("{rot}, "
 					.format(rot = int(angle)))

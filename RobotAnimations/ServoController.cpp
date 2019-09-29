@@ -2,6 +2,8 @@
 
 #include <Adafruit_PWMServoDriver.h>
 
+#include "SerialPrintf.h"
+
 #include <assert.h>
 
 ServoController::ServoController(const std::vector<ServoConfig>& servoSpecs)
