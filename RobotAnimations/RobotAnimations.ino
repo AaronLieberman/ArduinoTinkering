@@ -44,7 +44,7 @@ ShiftSharedLedButtonArray _buttons(kShiftLatchPin, kShiftClockPin, kShiftDataPin
 
 PeriodicDebug _periodicDebug(500, 0);
 
-bool _outputEnable = true;
+bool _outputEnable = false;
 int _idleAction = 0;
 int _actionIndex = 0;
 int _frameIndex = 0;
@@ -55,11 +55,13 @@ int _activeButton = -1;
 void setup()
 {
 	CircuitPlayground.begin();
+	CircuitPlayground.clearPixels();
 
 	Serial.begin(9600);
+	
+	while (!Serial); // ********
 
 	Serial.println("Setting up pins");
-
 	pinMode(kOutputEnablePin, OUTPUT);
 	digitalWrite(kOutputEnablePin, HIGH); // outputEnable is low when enabled
 
@@ -67,9 +69,6 @@ void setup()
 	_leftButton.initialize();
 	_rightButton.initialize();
 	_buttons.initialize();
-
-	Serial.println("Starting PWM");
-	Serial.println("(if this doesn't continue, maybe the servo board is unplugged?)");
 
 	_servoController.initialize();
 	delay(10);
@@ -142,6 +141,8 @@ void loop()
 		_outputEnable = !_outputEnable;
 		serialPrintfln("output enable -> %s", _outputEnable ? "true" : "false");
 	}
+	digitalWrite(kOutputEnablePin, _outputEnable ? LOW : HIGH); // outputEnable is low when enabled
+	CircuitPlayground.setPixelColor(0, _outputEnable ? 0 : 255, _outputEnable ? 255 : 0, 0);
 
 	if (millis() - _lastFrameMillis > kMilliPerFrame)
 	{
@@ -161,8 +162,6 @@ void loop()
 			_servoController.setPosition(servoIndex, frame.boneAngles[servoIndex]);
 		}
 	}
-
-	digitalWrite(kOutputEnablePin, _outputEnable ? LOW : HIGH); // outputEnable is low when enabled
 
 	int buttonDownIndex = _buttons.getButtonDown();
 	if (buttonDownIndex != -1)
