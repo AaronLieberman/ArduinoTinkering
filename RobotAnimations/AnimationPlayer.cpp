@@ -37,7 +37,8 @@ void AnimationPlayer::update()
 
 		for (int servoIndex = 0; servoIndex < m_servoController.getServoCount(); servoIndex++)
 		{
-			m_servoController.setPosition(servoIndex, frame.boneAngles[servoIndex]);
+			// add one to servoIndex because the data starts with torso angle
+			m_servoController.setPosition(servoIndex, frame.boneAngles[servoIndex + 1]);
 		}
 	}
 }

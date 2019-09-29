@@ -18,6 +18,7 @@
 #include "servoConfig.h"
 
 #define WAIT_ON_SERIAL
+#define SETUP_MODE
 
 constexpr int kShiftLatchPin = A1; // 74HC595 ST_CP
 constexpr int kShiftClockPin = A2; // 74HC595 SH_CP
@@ -43,15 +44,23 @@ AnimationPlayer _animationPlayer(_servoController);
 bool _outputEnable = false;
 int _activeButton = -1;
 
+#ifdef SETUP_MODE
+bool _setupMode = true;
+#else
+bool _setupMode = false;
+#endif
+
 void setup()
 {
 	CircuitPlayground.begin();
 	CircuitPlayground.clearPixels();
 
 	Serial.begin(9600);
-	
+
 #ifdef WAIT_ON_SERIAL
-	while (!Serial);
+	while (!Serial)
+	{
+	}
 #endif
 
 	Serial.println("Setting up pins");
@@ -85,20 +94,57 @@ void loop()
 	digitalWrite(kOutputEnablePin, _outputEnable ? LOW : HIGH); // outputEnable is low when enabled
 	CircuitPlayground.setPixelColor(0, _outputEnable ? 0 : 255, _outputEnable ? 255 : 0, 0);
 
-	_animationPlayer.update();
-
-	int buttonDownIndex = _buttons.getButtonDown();
-	if (buttonDownIndex != -1)
+	if (_setupMode)
 	{
-		switch (buttonDownIndex)
+		static int x_servoIndex = -1;
+		static int x_angle = 0;
+
+		if (x_servoIndex == -1)
 		{
-			case 0: _animationPlayer.startAnimation("Wave"); break;
-			case 1: _animationPlayer.startAnimation("Dab"); break;
-			case 2: _animationPlayer.startAnimation("Unknown1"); break;
-			case 3: _animationPlayer.startAnimation("Unknown2"); break;
+			x_servoIndex = 0;
+			_servoController.setPosition(x_servoIndex, x_angle);
 		}
 
-		_activeButton = buttonDownIndex;
+		int buttonDownIndex = _buttons.getButtonDown();
+		if (buttonDownIndex != -1)
+		{
+			switch (buttonDownIndex)
+			{
+				case 0:
+					x_servoIndex = std::min(x_servoIndex + 1, _servoController.getServoCount());
+					x_angle = 0;
+					break;
+				case 1:
+					x_servoIndex = std::max(x_servoIndex - 1, 0);
+					x_angle = 0;
+					break;
+				case 2: x_angle += 10; break;
+				case 3: x_angle -= 10; break;
+			}
+
+			_activeButton = buttonDownIndex;
+
+			serialPrintfln("set servo %d pos -> %d", x_servoIndex, x_angle);
+			_servoController.setPosition(x_servoIndex, x_angle);
+		}
+	}
+	else
+	{
+		_animationPlayer.update();
+
+		int buttonDownIndex = _buttons.getButtonDown();
+		if (buttonDownIndex != -1)
+		{
+			switch (buttonDownIndex)
+			{
+				case 0: _animationPlayer.startAnimation("Wave"); break;
+				case 1: _animationPlayer.startAnimation("Dab"); break;
+				case 2: _animationPlayer.startAnimation("Unknown1"); break;
+				case 3: _animationPlayer.startAnimation("Unknown2"); break;
+			}
+
+			_activeButton = buttonDownIndex;
+		}
 	}
 
 	_buttons.clearLedState();
