@@ -14,9 +14,9 @@ const std::vector<ServoConfig> kServoSpecs = {
 	{kServoKy66, 90, true},
 	{kServoA0090, 170, true},
 
-	{kServoKy66, 90, false},
-	{kServoKy66, 90, false},
-	{kServoKy66, 90, false},
+	{kServoKy66, 90, true},
+	{kServoKy66, 90, true},
+	{kServoKy66, 90, true},
 	{kServoA0090, 120, false},
 };
 

@@ -138,9 +138,9 @@ void loop()
 			switch (buttonDownIndex)
 			{
 				case 0: _animationPlayer.startAnimation("Wave"); break;
-				case 1: _animationPlayer.startAnimation("Dab"); break;
-				case 2: _animationPlayer.startAnimation("Unknown1"); break;
-				case 3: _animationPlayer.startAnimation("Unknown2"); break;
+				case 1: _animationPlayer.startAnimation("Drums"); break;
+				case 2: _animationPlayer.startAnimation("Robot"); break;
+				case 3: _animationPlayer.startAnimation("Macarena"); break;
 			}
 
 			_activeButton = buttonDownIndex;
@@ -148,7 +148,7 @@ void loop()
 	}
 
 	_buttons.clearLedState();
-	if (_activeButton != -1)
+	if (_activeButton != -1 && _animationPlayer.isAnimationActive())
 	{
 		_buttons.setLedState(_activeButton, true);
 	}

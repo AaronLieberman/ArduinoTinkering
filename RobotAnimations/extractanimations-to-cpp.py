@@ -5,9 +5,9 @@ from pathlib import Path
 arma = bpy.data.objects['Armature']
 
 # std::vector<Action> animationActions = {
-#   Action { "Dab", 
-#     std::vector<Frame> {
-#       Frame { std::vector<short> { 0, 13, 0, 0, 90, 13, 0, 90 } }
+#   Action { "Dab", 1,
+#     {
+#       Frame { { 13, 0, 0, 90, 13, 0, 90 } }
 #     }
 #   }
 #   ...
@@ -22,15 +22,18 @@ with filePath.open("w") as outFile:
 	outFile.write("\n")
 	outFile.write("#include \"Action.h\"\n")
 	outFile.write("\n")
-	outFile.write("const std::vector<Action> kActions = {\n")
+	outFile.write("const int kActionCount = {actionCount};\n"
+		.format(actionCount = len(bpy.data.actions)))
+	outFile.write("const Action kActions[{actionCount}] = {{\n"
+		.format(actionCount = len(bpy.data.actions)))
 
 	for act in bpy.data.actions:
 		if act.name == 'ArmatureAction':
 			continue
 
-		outFile.write('  Action {{ "{name}", \n'
-			.format(name = act.name))
-		outFile.write('    std::vector<Frame> {\n')
+		outFile.write('  Action {{ "{name}", {frameCount},\n'
+			.format(name = act.name, frameCount = int(act.frame_range.y + 1)))
+		outFile.write('    {\n')
 
 		arma.animation_data.action = act
 
@@ -39,7 +42,7 @@ with filePath.open("w") as outFile:
 			outFile.write('      Frame {{ {index}, {{ '
 				.format(index = frameIndex))
 
-			for pbone in arma.pose.bones:
+			for pbone in arma.pose.bones[1:]:
 				angle = degrees(pbone.rotation_euler.x + pbone.rotation_euler.y + pbone.rotation_euler.z)
 				
 				outFile.write("{rot}, "

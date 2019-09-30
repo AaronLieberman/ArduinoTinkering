@@ -36,8 +36,7 @@ void AnimationPlayer::update()
 
 		for (int servoIndex = 0; servoIndex < m_servoController.getServoCount(); servoIndex++)
 		{
-			// add one to servoIndex because the data starts with torso angle
-			m_servoController.setPosition(servoIndex, frame.boneAngles[servoIndex + 1]);
+			m_servoController.setPosition(servoIndex, frame.boneAngles[servoIndex]);
 		}
 	}
 }
@@ -46,7 +45,7 @@ void AnimationPlayer::startAnimation(const char* animationName)
 {
 	m_actionIndex = -1;
 
-	for (int i = 0; i < kActions.size(); i++)
+	for (int i = 0; i < kActionCount; i++)
 	{
 		if (strcmp(kActions[i].name, animationName) == 0)
 		{
@@ -59,9 +58,9 @@ void AnimationPlayer::startAnimation(const char* animationName)
 
 	if (m_actionIndex != -1)
 	{
-		m_frameCount = kActions[m_actionIndex].frames.size();
+		m_frameCount = kActions[m_actionIndex].frameCount;
 		serialPrintfln(
-			"starting animation %s (%d frames)", kActions[m_actionIndex].name, kActions[m_actionIndex].frames.size());
+			"starting animation %s (%d frames)", kActions[m_actionIndex].name, kActions[m_actionIndex].frameCount);
 		m_isAnimationActive = m_actionIndex != m_idleAction;
 	}
 	else
