@@ -3,5 +3,5 @@
 struct Frame
 {
 	short index;
-	std::vector<short> boneAngles;
+	short boneAngles[8];
 };

@@ -5,5 +5,6 @@
 struct Action
 {
 	const char* name;
-	std::vector<Frame> frames;
+	int frameCount;
+	Frame frames[281];
 };
