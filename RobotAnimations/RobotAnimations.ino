@@ -17,8 +17,9 @@
 
 #include "servoConfig.h"
 
-#define WAIT_ON_SERIAL
+//#define WAIT_ON_SERIAL
 //#define SETUP_MODE
+//#define PERIODIC_DEBUG
 
 constexpr int kShiftLatchPin = A1; // 74HC595 ST_CP
 constexpr int kShiftClockPin = A2; // 74HC595 SH_CP
@@ -30,8 +31,8 @@ LatchButton _leftButton(CPLAY_LEFTBUTTON, InputPinMode::PullDown);
 LatchButton _rightButton(CPLAY_RIGHTBUTTON, InputPinMode::PullDown);
 
 const std::vector<ShiftSharedLedButtonConfig> kButtonSpecs = {
-	{992, 995, 4},
 	{1017, 1019, 5},
+	{992, 995, 4},
 	{1023, 1023, 6},
 	{943, 947, 7},
 };
@@ -41,7 +42,7 @@ PeriodicDebug _periodicDebug(500, 0);
 ServoController _servoController(kServoSpecs);
 AnimationPlayer _animationPlayer(_servoController);
 
-bool _outputEnable = false;
+bool _outputEnable = true;
 int _activeButton = -1;
 
 #ifdef SETUP_MODE
@@ -65,7 +66,7 @@ void setup()
 
 	Serial.println("Setting up pins");
 	pinMode(kOutputEnablePin, OUTPUT);
-	digitalWrite(kOutputEnablePin, HIGH); // outputEnable is low when enabled
+	digitalWrite(kOutputEnablePin, _outputEnable ? LOW : HIGH); // outputEnable is low when enabled
 
 	_periodicDebug.initialize();
 	_leftButton.initialize();
@@ -84,7 +85,9 @@ void setup()
 
 void loop()
 {
+#ifdef PERIODIC_DEBUG
 	_periodicDebug.update();
+#endif
 
 	if (_leftButton.getAndClearState())
 	{
@@ -146,13 +149,6 @@ void loop()
 			_activeButton = buttonDownIndex;
 		}
 	}
-
-	_buttons.clearLedState();
-	if (_activeButton != -1 && _animationPlayer.isAnimationActive())
-	{
-		_buttons.setLedState(_activeButton, true);
-	}
-	_buttons.applyLedState();
 
 	delay(1);
 }
