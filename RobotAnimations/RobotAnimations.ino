@@ -28,7 +28,7 @@ constexpr int kReadButtonsPin = A3;
 constexpr int kOutputEnablePin = A6;
 
 constexpr int kDisplayChangeMillis = 1000;
-constexpr int kIdleTimeoutMillis = 10000;
+constexpr int kIdleTimeoutMillis = 30000;
 constexpr float kLedWheelSpeed = 0.1f;
 constexpr float kLedWheelDistance = 1.5f;
 
