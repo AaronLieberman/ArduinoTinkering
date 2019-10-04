@@ -18,6 +18,7 @@ void AnimationPlayer::initialize(const char* idleAnimationName)
 {
 	startAnimation(idleAnimationName);
 	m_idleAction = m_actionIndex;
+	m_isAnimationActive = false; // force this back to false now that we've started the idle animation
 }
 
 void AnimationPlayer::update()
