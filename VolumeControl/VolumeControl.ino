@@ -1,5 +1,6 @@
 #include "stlhelper.h"
 
+// comment out the #pragma message in KeyboardLayouts in this library to reduce compile noise
 #include "HID-Project.h"
 
 #include "Encoder.h"
