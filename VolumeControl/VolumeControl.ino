@@ -4,6 +4,7 @@
 #include "HID-Project.h"
 
 #include "Encoder.h"
+#include "LatchButton.h"
 
 #include <cmath>
 
@@ -17,6 +18,8 @@ const int kEncoderPinA = 0;
 const int kEncoderPinB = 1;
 
 Encoder _encoder(kEncoderPinA, kEncoderPinB);
+LatchButton _switch(kSwitchPin);
+LatchButton _encoderButton(kEncoderButtonPin);
 
 void valueChanged(int change) {
     for (int i = 0; i < std::abs(change); i++) {
@@ -29,9 +32,10 @@ void valueChanged(int change) {
 }
 
 void setup() {
-    pinMode(kEncoderButtonPin, INPUT_PULLUP);
-    pinMode(kSwitchPin, INPUT_PULLUP);
     pinMode(kLedPin, OUTPUT);
+
+    _switch.initialize();
+    _encoderButton.initialize();
 
     _encoder.initialize();
     attachInterrupt(
@@ -53,8 +57,13 @@ void loop() {
 
     _encoder.update();
 
-    if (digitalRead(kSwitchPin) == LOW) {
+    if (_switch.getAndClearState()) {
         Consumer.write(MEDIA_PLAY_PAUSE);
+        delay(200);
+    }
+
+    if (_encoderButton.getAndClearState()) {
+        Consumer.write(MEDIA_VOLUME_MUTE);
         delay(200);
     }
 }

@@ -32,6 +32,7 @@ bool Encoder::update() {
 void Encoder::_interruptTriggeredInternal(int pin1, bool& pin1Set, bool pin2Set, int mod) {
     // debounce
     if (_rotating) {
+        //********this can cause a halt!!! fixme
         delay(1);  // wait a little until the bouncing is done
     }
 
