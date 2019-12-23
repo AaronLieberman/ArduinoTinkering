@@ -35,22 +35,26 @@ bool Encoder::update() {
         pinB = digitalRead(_encoderPinB);
     }
 
-    if (_lastPinA != pinA && _lastPinB == pinB && pinA && !pinB) {
-        _encoderPos--;
-    } else if (_lastPinB != pinB && _lastPinA == pinA && pinA && pinB) {
-        _encoderPos--;
-    } else if (_lastPinA != pinA && _lastPinB == pinB && !pinA && pinB) {
-        _encoderPos--;
-    } else if (_lastPinB != pinB && _lastPinA == pinA && !pinA && !pinB) {
-        _encoderPos--;
-    } else if (_lastPinA != pinA && _lastPinB == pinB && pinA && pinB) {
-        _encoderPos++;
-    } else if (_lastPinB != pinB && _lastPinA == pinA && pinA && !pinB) {
-        _encoderPos++;
-    } else if (_lastPinA != pinA && _lastPinB == pinB && !pinA && !pinB) {
-        _encoderPos++;
-    } else if (_lastPinB != pinB && _lastPinA == pinA && !pinA && pinB) {
-        _encoderPos++;
+    if (_lastPinA != pinA && _lastPinB == pinB) {
+        if (pinA && !pinB) {
+            _encoderPos--;
+        } else if (!pinA && pinB) {
+            _encoderPos--;
+        } else if (pinA && pinB) {
+            _encoderPos++;
+        } else if (!pinA && !pinB) {
+            _encoderPos++;
+        }
+    } else if (_lastPinB != pinB && _lastPinA == pinA) {
+        if (pinA && pinB) {
+            _encoderPos--;
+        } else if (!pinA && !pinB) {
+            _encoderPos--;
+        } else if (pinA && !pinB) {
+            _encoderPos++;
+        } else if (!pinA && pinB) {
+            _encoderPos++;
+        }
     }
 
     _lastPinA = pinA;
