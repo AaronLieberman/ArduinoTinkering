@@ -27,7 +27,6 @@ void valueChanged(int change) {
         Serial.println(change > 0 ? "Volume up" : "Volume down");
 #endif
         Consumer.write(change > 0 ? MEDIA_VOLUME_UP : MEDIA_VOLUME_DOWN);
-        delay(30);
     }
 }
 
@@ -38,10 +37,6 @@ void setup() {
     _encoderButton.initialize();
 
     _encoder.initialize();
-    attachInterrupt(
-        digitalPinToInterrupt(kEncoderPinA), []() { _encoder.interruptATriggered(); }, CHANGE);
-    attachInterrupt(
-        digitalPinToInterrupt(kEncoderPinB), []() { _encoder.interruptBTriggered(); }, CHANGE);
     _encoder.setValueChanged([](int change) { valueChanged(change); });
 
     Consumer.begin();

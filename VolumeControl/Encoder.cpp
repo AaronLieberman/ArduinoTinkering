@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <functional>
 
+static const int kDebounceMicros = 2000;
+
 Encoder::Encoder(int encoderPinA, int encoderPinB)
     : _encoderPinA(encoderPinA)
     , _encoderPinB(encoderPinB) {
@@ -11,11 +13,48 @@ Encoder::Encoder(int encoderPinA, int encoderPinB)
 void Encoder::initialize() {
     pinMode(_encoderPinA, INPUT_PULLUP);
     pinMode(_encoderPinB, INPUT_PULLUP);
+
+    _lastPinA = digitalRead(_encoderPinA);
+    _lastPinB = digitalRead(_encoderPinB);
 }
 
 bool Encoder::update() {
     bool changed = false;
-    _rotating = true;  // reset the debouncer
+
+    uint now = micros();
+
+    bool pinA = _lastPinA;
+    if (now >= _lastPinAChange + kDebounceMicros) {
+        _lastPinAChange = now;
+        pinA = digitalRead(_encoderPinA);
+    }
+
+    bool pinB = _lastPinB;
+    if (now >= _lastPinBChange + kDebounceMicros) {
+        _lastPinBChange = now;
+        pinB = digitalRead(_encoderPinB);
+    }
+
+    if (_lastPinA != pinA && _lastPinB == pinB && pinA && !pinB) {
+        _encoderPos--;
+    } else if (_lastPinB != pinB && _lastPinA == pinA && pinA && pinB) {
+        _encoderPos--;
+    } else if (_lastPinA != pinA && _lastPinB == pinB && !pinA && pinB) {
+        _encoderPos--;
+    } else if (_lastPinB != pinB && _lastPinA == pinA && !pinA && !pinB) {
+        _encoderPos--;
+    } else if (_lastPinA != pinA && _lastPinB == pinB && pinA && pinB) {
+        _encoderPos++;
+    } else if (_lastPinB != pinB && _lastPinA == pinA && pinA && !pinB) {
+        _encoderPos++;
+    } else if (_lastPinA != pinA && _lastPinB == pinB && !pinA && !pinB) {
+        _encoderPos++;
+    } else if (_lastPinB != pinB && _lastPinA == pinA && !pinA && pinB) {
+        _encoderPos++;
+    }
+
+    _lastPinA = pinA;
+    _lastPinB = pinB;
 
     if (_lastReportedPos != _encoderPos) {
         changed = true;
@@ -27,32 +66,4 @@ bool Encoder::update() {
     }
 
     return changed;
-}
-
-void Encoder::_interruptTriggeredInternal(int pin1, bool& pin1Set, bool pin2Set, int mod) {
-    // debounce
-    if (_rotating) {
-        //********this can cause a halt!!! fixme
-        delay(1);  // wait a little until the bouncing is done
-    }
-
-    // Test transition, did things really change?
-    if (digitalRead(pin1) != pin1Set) {  // debounce once more
-        pin1Set = !pin1Set;
-
-        // adjust counter + if the first pin leads the second pin
-        if (pin1Set && !pin2Set) {
-            _encoderPos += mod;
-        }
-
-        _rotating = false;  // no more debouncing until loop() hits again
-    }
-}
-
-void Encoder::interruptATriggered() {
-    _interruptTriggeredInternal(_encoderPinA, _pinASet, _pinBSet, -1);
-}
-
-void Encoder::interruptBTriggered() {
-    _interruptTriggeredInternal(_encoderPinB, _pinBSet, _pinASet, 1);
 }
