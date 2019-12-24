@@ -31,6 +31,10 @@ void valueChanged(int change) {
 }
 
 void setup() {
+#ifdef TEST_SERIAL
+    Serial.begin(9600);
+#endif
+
     pinMode(kLedPin, OUTPUT);
 
     _switch.initialize();
@@ -40,10 +44,6 @@ void setup() {
     _encoder.setValueChanged([](int change) { valueChanged(change); });
 
     Consumer.begin();
-
-#ifdef TEST_SERIAL
-    Serial.begin(9600);
-#endif
 }
 
 void loop() {
