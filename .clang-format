@@ -3,20 +3,22 @@ Language: Cpp
 
 AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
-AlignConsecutiveAssignments: 'false'
-AlignConsecutiveDeclarations: 'false'
-AlignEscapedNewlinesLeft: 'false'
-AlignOperands: 'false'
-AlignTrailingComments: 'false'
-ColumnLimit: '120'
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlinesLeft: false
+AlignOperands: false
+AlignTrailingComments: false
+ColumnLimit: 120
 TabWidth: 4
 UseTab: ForIndentation
 AllowShortFunctionsOnASingleLine: Inline
+AllowShortCaseLabelsOnASingleLine: true
 ContinuationIndentWidth: 4
 ConstructorInitializerIndentWidth: 4
 IndentWidth: 4
+IndentCaseLabels: true
 
-SortIncludes: 'true'
+SortIncludes: true
 IncludeCategories:
   - Regex:           '^<Arduino'
     Priority:        1
