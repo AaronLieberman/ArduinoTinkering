@@ -1,0 +1,8 @@
+{
+    "board": "adafruit:samd:adafruit_trinket_m0",
+    "configuration": "usbstack=arduino,debug=on",
+    "sketch": "HyperFig.ino",
+    "output": ".output",
+    "port": "COM6",
+    "programmer": "AVRISP mkII"
+}
