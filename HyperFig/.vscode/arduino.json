@@ -1,8 +1,8 @@
 {
-    "board": "adafruit:samd:adafruit_trinket_m0",
-    "configuration": "usbstack=arduino,debug=on",
+    "board": "adafruit:samd:adafruit_pybadge_m4",
+    "configuration": "cache=on,speed=120,opt=small,maxqspi=50,usbstack=arduino,debug=off",
     "sketch": "HyperFig.ino",
     "output": ".output",
-    "port": "COM6",
+    "port": "COM4",
     "programmer": "AVRISP mkII"
 }

@@ -1,5 +1,4 @@
 #include "LatchButton.h"
-#include "PeriodicDebug.h"
 #include "SerialPrintf.h"
 #include "SharedLedButtonArray.h"
 
@@ -9,22 +8,18 @@
 #include <string>
 #include <vector>
 
-constexpr int kReadButtonsPin = A3;
+constexpr int kReadButtonsPin = A5;
 
 const std::vector<SharedLedButtonConfig> kButtonSpecs = {
-    {1017, 1019, 5},
-    {992, 995, 4},
-    {1023, 1023, 6},
-    {943, 947, 7},
+    {395, 10, 9},
+    {229, 10, 10},
+    {519, 10, 11},
+    {691, 10, 12},
 };
-SharedLedButtonArray _buttons(kReadButtonsPin, kButtonSpecs);
-
-PeriodicDebug _periodicDebug(500, 0);
-
-int _activeButton = -1;
+SharedLedButtonArray _buttons(kReadButtonsPin, INPUT_PULLUP, kButtonSpecs, 0);
 
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(115200);
 
 #ifdef WAIT_ON_SERIAL
 	while (!Serial) {
@@ -39,9 +34,11 @@ void setup() {
 }
 
 void loop() {
-#ifdef PERIODIC_DEBUG
-	_periodicDebug.update();
-#endif
+	int buttonDownIndex = _buttons.getButtonDown();
+	_buttons.setSingleLedOn(buttonDownIndex);
 
-	delay(1);
+	int value = analogRead(kReadButtonsPin);
+	Serial.println(value);
+
+	delay(50);
 }

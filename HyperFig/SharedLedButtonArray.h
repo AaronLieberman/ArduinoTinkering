@@ -4,14 +4,15 @@
 #include <vector>
 
 struct SharedLedButtonConfig {
-	int readLow;
-	int readHigh;
-	int ledIndex;
+	int readTarget;
+	int tolerance;
+	int ledPin;
 };
 
 class SharedLedButtonArray {
 public:
-	SharedLedButtonArray(int readPin, const std::vector<SharedLedButtonConfig> &config);
+	SharedLedButtonArray(int readPin, int inputMode, const std::vector<SharedLedButtonConfig> &buttonConfig,
+	    int minTriggerInterval = 300);
 
 	void initialize();
 
@@ -19,15 +20,14 @@ public:
 
 	void clearLedState();
 	void setLedState(int ledIndex, bool state);
-	// call after clearing or setting LED state
-	void applyLedState();
+	void setSingleLedOn(int ledIndex);
 
 private:
 	int _readPin;
-	std::vector<SharedLedButtonConfig> _config;
+	int _inputMode;
+	std::vector<SharedLedButtonConfig> _buttonConfig;
+	int _minTriggerInterval;
 
 	int _buttonLatched = -1;
 	int _lastTriggered = 0;
-
-	int _ledState = 0;
 };
