@@ -18,7 +18,7 @@ static void serialPrintfInternal(const char *str, va_list &argv) {
 
 			switch (str[++i]) {
 				case 'd': Serial.print(va_arg(argv, int)); break;
-				case 'h': Serial.print(va_arg(argv, short)); break;
+				// case 'h': Serial.print(va_arg(argv, short)); break;
 				case 'z': Serial.print(va_arg(argv, size_t)); break;
 				case 'l': Serial.print(va_arg(argv, long)); break;
 				case 'f': Serial.print(va_arg(argv, double)); break;

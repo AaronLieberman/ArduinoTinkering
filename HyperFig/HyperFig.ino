@@ -1,6 +1,6 @@
 #include "LatchButton.h"
 #include "SerialPrintf.h"
-#include "SharedLedButtonArray.h"
+#include "SharedButtonArray.h"
 
 #include "stlhelper.h"
 #include <functional>
@@ -8,15 +8,18 @@
 #include <string>
 #include <vector>
 
-constexpr int kReadButtonsPin = A5;
+const int kReadButtonsPin = A5;
+const int kLatchPin = 9;
+const int kDataPin = 11;
+const int kClockPin = 12;
 
-const std::vector<SharedLedButtonConfig> kButtonSpecs = {
-    {395, 10, 9},
-    {229, 10, 10},
-    {519, 10, 11},
-    {691, 10, 12},
+const std::vector<SharedButtonConfig> kButtonSpecs = {
+    {1015, 5},
+    {1003, 5},
+    {980, 10},
+    {932, 15},
 };
-SharedLedButtonArray _buttons(kReadButtonsPin, INPUT_PULLUP, kButtonSpecs, 0);
+SharedButtonArray _buttons(kReadButtonsPin, INPUT_PULLUP, kButtonSpecs, 0);
 
 void setup() {
 	Serial.begin(115200);
@@ -30,15 +33,24 @@ void setup() {
 	Serial.println("Setting up pins");
 	_buttons.initialize();
 
+	pinMode(kLatchPin, OUTPUT);
+	pinMode(kDataPin, OUTPUT);
+	pinMode(kClockPin, OUTPUT);
+
 	delay(10);
 }
 
 void loop() {
-	int buttonDownIndex = _buttons.getButtonDown();
-	_buttons.setSingleLedOn(buttonDownIndex);
+	// TODO: multiple buttons at once dont quite work
+	uint buttonsDown = _buttons.getMultipleButtonDown();
 
-	int value = analogRead(kReadButtonsPin);
-	Serial.println(value);
+	// int buttonDownIndex = _buttons.getButtonDown();
+	// int value = 1 << buttonDownIndex;
+	// serialPrintfln("%d - %d - %d", analogRead(kReadButtonsPin), buttonDownIndex, value);
+
+	digitalWrite(kLatchPin, 0);
+	shiftOut(kDataPin, kClockPin, MSBFIRST, buttonsDown);
+	digitalWrite(kLatchPin, 1);
 
 	delay(50);
 }
