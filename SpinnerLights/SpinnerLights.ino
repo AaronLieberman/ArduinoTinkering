@@ -1,25 +1,22 @@
-#include "LatchButton.h"
-#include "SerialPrintf.h"
-#include "SharedButtonArray.h"
+//#include "Color3F.h"
 
-#include "stlhelper.h"
+#include "SerialPrintf.h"
+
+//#include "stlhelper.h" // includes Arduino.h
+#include <Arduino.h>
+
+#include <Adafruit_NeoPixel.h>
+
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
-const int kReadButtonsPin = A5;
-const int kLatchPin = 9;
-const int kDataPin = 11;
-const int kClockPin = 12;
+const int kNeoPixelPin = 1;
+const int kLedPin = 13;
+const int kNumNeoPixels = 3;
 
-const std::vector<SharedButtonConfig> kButtonSpecs = {
-    {1015, 5},
-    {1003, 5},
-    {980, 10},
-    {932, 15},
-};
-SharedButtonArray _buttons(kReadButtonsPin, INPUT_PULLUP, kButtonSpecs, 0);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(kNumNeoPixels, kNeoPixelPin, NEO_RGB + NEO_KHZ800);
 
 void setup() {
 	Serial.begin(115200);
@@ -30,27 +27,29 @@ void setup() {
 	}
 #endif
 
-	Serial.println("Setting up pins");
-	_buttons.initialize();
+	pinMode(kLedPin, OUTPUT);
 
-	pinMode(kLatchPin, OUTPUT);
-	pinMode(kDataPin, OUTPUT);
-	pinMode(kClockPin, OUTPUT);
+	pixels.begin();
+	pixels.show();
 
 	delay(10);
 }
 
 void loop() {
-	// TODO: multiple buttons at once dont quite work
-	uint buttonsDown = _buttons.getMultipleButtonDown();
+	// digitalWrite(kLedPin, LOW);
+	// delay(300);
+	// digitalWrite(kLedPin, HIGH);
+	// delay(150);
 
-	// int buttonDownIndex = _buttons.getButtonDown();
-	// int value = 1 << buttonDownIndex;
-	// serialPrintfln("%d - %d - %d", analogRead(kReadButtonsPin), buttonDownIndex, value);
+	static int foo = 0;
+	foo++;
 
-	digitalWrite(kLatchPin, 0);
-	shiftOut(kDataPin, kClockPin, MSBFIRST, buttonsDown);
-	digitalWrite(kLatchPin, 1);
+	for (int i = 0; i < kNumNeoPixels; i++) {
+		int v = foo % kNumNeoPixels == i ? 255 : 0;
+		pixels.setPixelColor(i, v, 0, 0);
+	}
+	pixels.show();
 
-	delay(50);
+	digitalWrite(kLedPin, (foo % 2) == 0 ? LOW : HIGH);
+	delay(100);
 }
