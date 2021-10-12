@@ -17,6 +17,7 @@ ContinuationIndentWidth: 4
 ConstructorInitializerIndentWidth: 4
 IndentWidth: 4
 IndentCaseLabels: true
+PointerAlignment: Left
 
 SortIncludes: true
 IncludeCategories:
