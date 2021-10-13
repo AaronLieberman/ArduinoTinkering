@@ -1,4 +1,201 @@
-EESchema Schematic File Version 2
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Device:R R?
+U 1 1 6165C2B5
+P 1850 1600
+F 0 "R?" H 1920 1646 50  0000 L CNN
+F 1 "R" H 1920 1555 50  0000 L CNN
+F 2 "" V 1780 1600 50  0001 C CNN
+F 3 "~" H 1850 1600 50  0001 C CNN
+	1    1850 1600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Seeeduino_XIAO:SeeeduinoXIAO U1
+U 1 1 6165F8D1
+P 3750 4850
+F 0 "U1" H 3725 3911 50  0000 C CNN
+F 1 "SeeeduinoXIAO" H 3725 3820 50  0000 C CNN
+F 2 "Seeeduino_XIAO:Seeeduino XIAO-MOUDLE14P-2.54-21X17.8MM" H 3400 5050 50  0001 C CNN
+F 3 "" H 3400 5050 50  0001 C CNN
+	1    3750 4850
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:D D?
+U 1 1 61660AAE
+P 6000 5350
+F 0 "D?" H 6000 5567 50  0000 C CNN
+F 1 "D" H 6000 5476 50  0000 C CNN
+F 2 "" H 6000 5350 50  0001 C CNN
+F 3 "~" H 6000 5350 50  0001 C CNN
+	1    6000 5350
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Sensor_Motion:ADXL343 U2
+U 1 1 61662620
+P 7500 4750
+F 0 "U2" H 8044 4796 50  0000 L CNN
+F 1 "ADXL343" H 8044 4705 50  0000 L CNN
+F 2 "Package_LGA:LGA-14_3x5mm_P0.8mm_LayoutBorder1x6y" H 7500 4750 50  0001 C CNN
+F 3 "https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL343.pdf" H 7500 4750 50  0001 C CNN
+	1    7500 4750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:Battery_Cell BT2
+U 1 1 6165CE41
+P 2750 6400
+F 0 "BT2" H 2868 6496 50  0000 L CNN
+F 1 "Battery_Cell" H 2868 6405 50  0000 L CNN
+F 2 "" V 2750 6460 50  0001 C CNN
+F 3 "~" V 2750 6460 50  0001 C CNN
+	1    2750 6400
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 616648C6
+P 6000 7100
+F 0 "#PWR?" H 6000 6850 50  0001 C CNN
+F 1 "GND" H 6005 6927 50  0000 C CNN
+F 2 "" H 6000 7100 50  0001 C CNN
+F 3 "" H 6000 7100 50  0001 C CNN
+	1    6000 7100
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR?
+U 1 1 6166500D
+P 7350 2750
+F 0 "#PWR?" H 7350 2600 50  0001 C CNN
+F 1 "+3V3" H 7365 2923 50  0000 C CNN
+F 2 "" H 7350 2750 50  0001 C CNN
+F 3 "" H 7350 2750 50  0001 C CNN
+	1    7350 2750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:CP C?
+U 1 1 6165BD44
+P 2550 1600
+F 0 "C?" H 2668 1646 50  0000 L CNN
+F 1 "CP" H 2668 1555 50  0000 L CNN
+F 2 "" H 2588 1450 50  0001 C CNN
+F 3 "~" H 2550 1600 50  0001 C CNN
+	1    2550 1600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:Battery_Cell BT1
+U 1 1 616660DA
+P 2750 6900
+F 0 "BT1" H 2868 6996 50  0000 L CNN
+F 1 "Battery_Cell" H 2868 6905 50  0000 L CNN
+F 2 "" V 2750 6960 50  0001 C CNN
+F 3 "~" V 2750 6960 50  0001 C CNN
+	1    2750 6900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R1
+U 1 1 6166A991
+P 6600 5250
+F 0 "R1" H 6670 5296 50  0000 L CNN
+F 1 "10K" H 6670 5205 50  0000 L CNN
+F 2 "" V 6530 5250 50  0001 C CNN
+F 3 "~" H 6600 5250 50  0001 C CNN
+	1    6600 5250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7000 4950 6600 4950
+Wire Wire Line
+	6600 4950 6600 5100
+$Comp
+L power:+3V3 #PWR?
+U 1 1 6166C856
+P 6600 5600
+F 0 "#PWR?" H 6600 5450 50  0001 C CNN
+F 1 "+3V3" H 6615 5773 50  0000 C CNN
+F 2 "" H 6600 5600 50  0001 C CNN
+F 3 "" H 6600 5600 50  0001 C CNN
+	1    6600 5600
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6600 5400 6600 5600
+$Comp
+L power:GND #PWR?
+U 1 1 6166D36D
+P 4000 3650
+F 0 "#PWR?" H 4000 3400 50  0001 C CNN
+F 1 "GND" H 4005 3477 50  0000 C CNN
+F 2 "" H 4000 3650 50  0001 C CNN
+F 3 "" H 4000 3650 50  0001 C CNN
+	1    4000 3650
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4000 3950 4000 3650
+Wire Wire Line
+	2750 6700 2750 6500
+Wire Wire Line
+	2750 5700 3650 5700
+Wire Wire Line
+	2750 5700 2750 6200
+Wire Wire Line
+	3850 5700 4200 5700
+Wire Wire Line
+	4200 5700 4200 7000
+Wire Wire Line
+	4200 7000 2750 7000
+$Comp
+L Jumper:Jumper_2_Open JP?
+U 1 1 61672D55
+P 6000 6000
+F 0 "JP?" H 6000 6235 50  0000 C CNN
+F 1 "Jumper_2_Open" H 6000 6144 50  0000 C CNN
+F 2 "" H 6000 6000 50  0001 C CNN
+F 3 "~" H 6000 6000 50  0001 C CNN
+	1    6000 6000
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	6600 4950 6000 4950
+Wire Wire Line
+	6000 4950 6000 5200
+Connection ~ 6600 4950
+Wire Wire Line
+	6000 5500 6000 5800
+$Comp
+L Device:R R?
+U 1 1 616788BD
+P 6000 6650
+F 0 "R?" H 6070 6696 50  0000 L CNN
+F 1 "5K" H 6070 6605 50  0000 L CNN
+F 2 "" V 5930 6650 50  0001 C CNN
+F 3 "~" H 6000 6650 50  0001 C CNN
+	1    6000 6650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6000 6200 6000 6500
+Wire Wire Line
+	6000 6800 6000 7100
 $EndSCHEMATC
