@@ -25,41 +25,6 @@ F 3 "" H 5950 4150 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR01
-U 1 1 616648C6
-P 1800 4650
-F 0 "#PWR01" H 1800 4400 50  0001 C CNN
-F 1 "GND" H 1805 4477 50  0000 C CNN
-F 2 "" H 1800 4650 50  0001 C CNN
-F 3 "" H 1800 4650 50  0001 C CNN
-	1    1800 4650
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R1
-U 1 1 6166A991
-P 2150 4250
-F 0 "R1" H 2220 4296 50  0000 L CNN
-F 1 "10K" H 2220 4205 50  0000 L CNN
-F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" V 2080 4250 50  0001 C CNN
-F 3 "~" H 2150 4250 50  0001 C CNN
-	1    2150 4250
-	0    1    1    0   
-$EndComp
-$Comp
-L power:+3V3 #PWR02
-U 1 1 6166C856
-P 1800 4150
-F 0 "#PWR02" H 1800 4000 50  0001 C CNN
-F 1 "+3V3" H 1815 4323 50  0000 C CNN
-F 2 "" H 1800 4150 50  0001 C CNN
-F 3 "" H 1800 4150 50  0001 C CNN
-	1    1800 4150
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	2000 4250 1800 4250
-$Comp
 L power:+3V3 #PWR07
 U 1 1 61671FEA
 P 7650 3800
@@ -85,98 +50,14 @@ F 3 "" H 7450 3650 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	7100 3650 7450 3650
-Wire Wire Line
-	2300 4250 2700 4250
-$Comp
-L power:GND #PWR03
-U 1 1 616882FF
-P 3200 5100
-F 0 "#PWR03" H 3200 4850 50  0001 C CNN
-F 1 "GND" H 3205 4927 50  0000 C CNN
-F 2 "" H 3200 5100 50  0001 C CNN
-F 3 "" H 3200 5100 50  0001 C CNN
-	1    3200 5100
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3200 4850 3200 5000
-$Comp
-L power:+3V3 #PWR04
-U 1 1 61689627
-P 3400 3650
-F 0 "#PWR04" H 3400 3500 50  0001 C CNN
-F 1 "+3V3" H 3415 3823 50  0000 C CNN
-F 2 "" H 3400 3650 50  0001 C CNN
-F 3 "" H 3400 3650 50  0001 C CNN
-	1    3400 3650
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3400 3850 3400 3750
-Wire Wire Line
-	3200 3850 3200 3750
-Wire Wire Line
-	3200 3750 3400 3750
-Connection ~ 3400 3750
-Wire Wire Line
-	3400 3750 3400 3650
-$Comp
-L Device:C C1
-U 1 1 6168F775
-P 4600 4000
-F 0 "C1" H 4715 4046 50  0000 L CNN
-F 1 "0.1uF" H 4715 3955 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0805_2012Metric" H 4638 3850 50  0001 C CNN
-F 3 "~" H 4600 4000 50  0001 C CNN
-	1    4600 4000
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	4600 5000 4600 4150
-Connection ~ 3200 5000
-Wire Wire Line
-	3200 5000 3200 5100
-Wire Wire Line
-	4600 3850 4600 3750
 Text GLabel 7450 4250 2    50   Input ~ 0
 INT2
 Text GLabel 7450 4100 2    50   Input ~ 0
 INT1
 Wire Wire Line
-	3200 5000 4600 5000
-Wire Wire Line
-	3400 3750 4600 3750
-Text GLabel 3850 4450 2    50   Input ~ 0
-INT2
-Text GLabel 3850 4350 2    50   Input ~ 0
-INT1
-$Comp
-L Sensor_Motion:ADXL343 U2
-U 1 1 61662620
-P 3200 4350
-F 0 "U2" H 3744 4724 50  0000 L CNN
-F 1 "ADXL343" H 3744 4646 50  0000 L CNN
-F 2 "Package_LGA:LGA-14_3x5mm_P0.8mm_LayoutBorder1x6y" H 3200 4350 50  0001 C CNN
-F 3 "https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL343.pdf" H 3200 4350 50  0001 C CNN
-	1    3200 4350
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3700 4350 3850 4350
-Wire Wire Line
-	3850 4450 3700 4450
-Wire Wire Line
 	7100 4100 7450 4100
 Wire Wire Line
 	7450 4250 7100 4250
-Text GLabel 2550 4350 0    50   Input ~ 0
-SDA
-Text GLabel 2550 4450 0    50   Input ~ 0
-SCL
-Wire Wire Line
-	2700 4450 2550 4450
-Wire Wire Line
-	2550 4350 2700 4350
 Text GLabel 5300 4100 0    50   Input ~ 0
 SDA
 Text GLabel 5300 4250 0    50   Input ~ 0
@@ -222,8 +103,6 @@ F 3 "" H 9200 1350 50  0001 C CNN
 	1    9200 1350
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	5100 1150 8900 1150
 $Comp
 L LED:NeoPixel_THT PIXEL4
 U 1 1 616C9B9C
@@ -254,8 +133,6 @@ Wire Wire Line
 	10350 3350 8900 3350
 Wire Wire Line
 	8900 3350 8900 3000
-Wire Wire Line
-	5100 1150 5100 3100
 Wire Wire Line
 	8900 1150 8900 1300
 $Comp
@@ -346,25 +223,6 @@ Wire Wire Line
 	10050 2700 10050 3000
 Wire Wire Line
 	10350 2400 10350 1900
-Wire Wire Line
-	1800 4250 1800 4150
-$Comp
-L Device:R R2
-U 1 1 6176EC78
-P 2150 4550
-F 0 "R2" H 2220 4596 50  0000 L CNN
-F 1 "10K" H 2220 4505 50  0000 L CNN
-F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" V 2080 4550 50  0001 C CNN
-F 3 "~" H 2150 4550 50  0001 C CNN
-	1    2150 4550
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	2700 4550 2300 4550
-Wire Wire Line
-	2000 4550 1800 4550
-Wire Wire Line
-	1800 4550 1800 4650
 $Comp
 L Device:D D1
 U 1 1 61765328
@@ -398,14 +256,162 @@ Wire Wire Line
 Wire Wire Line
 	7250 3500 7100 3500
 $Comp
-L power:GND #PWR?
+L power:GND #PWR0102
 U 1 1 617929E5
 P 8200 4850
-F 0 "#PWR?" H 8200 4600 50  0001 C CNN
+F 0 "#PWR0102" H 8200 4600 50  0001 C CNN
 F 1 "GND" H 8205 4677 50  0000 C CNN
 F 2 "" H 8200 4850 50  0001 C CNN
 F 3 "" H 8200 4850 50  0001 C CNN
 	1    8200 4850
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	5100 3100 5100 2950
+Wire Wire Line
+	5100 2950 8400 2950
+Wire Wire Line
+	8400 2950 8400 1150
+Wire Wire Line
+	8400 1150 8900 1150
+Wire Wire Line
+	1800 4550 1800 4650
+Wire Wire Line
+	2000 4550 1800 4550
+Wire Wire Line
+	2700 4550 2300 4550
+$Comp
+L Device:R R2
+U 1 1 6176EC78
+P 2150 4550
+F 0 "R2" H 2220 4596 50  0000 L CNN
+F 1 "10K" H 2220 4505 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" V 2080 4550 50  0001 C CNN
+F 3 "~" H 2150 4550 50  0001 C CNN
+	1    2150 4550
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	1800 4250 1800 4150
+Wire Wire Line
+	2550 4350 2700 4350
+Wire Wire Line
+	2700 4450 2550 4450
+Text GLabel 2550 4450 0    50   Input ~ 0
+SCL
+Text GLabel 2550 4350 0    50   Input ~ 0
+SDA
+Wire Wire Line
+	3850 4450 3700 4450
+Wire Wire Line
+	3700 4350 3850 4350
+$Comp
+L Sensor_Motion:ADXL343 U2
+U 1 1 61662620
+P 3200 4350
+F 0 "U2" H 3744 4724 50  0000 L CNN
+F 1 "ADXL343" H 3744 4646 50  0000 L CNN
+F 2 "Package_LGA:LGA-14_3x5mm_P0.8mm_LayoutBorder1x6y" H 3200 4350 50  0001 C CNN
+F 3 "https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL343.pdf" H 3200 4350 50  0001 C CNN
+	1    3200 4350
+	1    0    0    -1  
+$EndComp
+Text GLabel 3850 4350 2    50   Input ~ 0
+INT1
+Text GLabel 3850 4450 2    50   Input ~ 0
+INT2
+Wire Wire Line
+	3400 3750 4600 3750
+Wire Wire Line
+	3200 5000 4600 5000
+Wire Wire Line
+	4600 3850 4600 3750
+Wire Wire Line
+	3200 5000 3200 5100
+Connection ~ 3200 5000
+Wire Wire Line
+	4600 5000 4600 4150
+$Comp
+L Device:C C1
+U 1 1 6168F775
+P 4600 4000
+F 0 "C1" H 4715 4046 50  0000 L CNN
+F 1 "0.1uF" H 4715 3955 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric" H 4638 3850 50  0001 C CNN
+F 3 "~" H 4600 4000 50  0001 C CNN
+	1    4600 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3400 3750 3400 3650
+Connection ~ 3400 3750
+Wire Wire Line
+	3200 3750 3400 3750
+Wire Wire Line
+	3200 3850 3200 3750
+Wire Wire Line
+	3400 3850 3400 3750
+$Comp
+L power:+3V3 #PWR04
+U 1 1 61689627
+P 3400 3650
+F 0 "#PWR04" H 3400 3500 50  0001 C CNN
+F 1 "+3V3" H 3415 3823 50  0000 C CNN
+F 2 "" H 3400 3650 50  0001 C CNN
+F 3 "" H 3400 3650 50  0001 C CNN
+	1    3400 3650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3200 4850 3200 5000
+$Comp
+L power:GND #PWR03
+U 1 1 616882FF
+P 3200 5100
+F 0 "#PWR03" H 3200 4850 50  0001 C CNN
+F 1 "GND" H 3205 4927 50  0000 C CNN
+F 2 "" H 3200 5100 50  0001 C CNN
+F 3 "" H 3200 5100 50  0001 C CNN
+	1    3200 5100
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2300 4250 2700 4250
+Wire Wire Line
+	2000 4250 1800 4250
+$Comp
+L power:+3V3 #PWR02
+U 1 1 6166C856
+P 1800 4150
+F 0 "#PWR02" H 1800 4000 50  0001 C CNN
+F 1 "+3V3" H 1815 4323 50  0000 C CNN
+F 2 "" H 1800 4150 50  0001 C CNN
+F 3 "" H 1800 4150 50  0001 C CNN
+	1    1800 4150
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R1
+U 1 1 6166A991
+P 2150 4250
+F 0 "R1" H 2220 4296 50  0000 L CNN
+F 1 "10K" H 2220 4205 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" V 2080 4250 50  0001 C CNN
+F 3 "~" H 2150 4250 50  0001 C CNN
+	1    2150 4250
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GND #PWR01
+U 1 1 616648C6
+P 1800 4650
+F 0 "#PWR01" H 1800 4400 50  0001 C CNN
+F 1 "GND" H 1805 4477 50  0000 C CNN
+F 2 "" H 1800 4650 50  0001 C CNN
+F 3 "" H 1800 4650 50  0001 C CNN
+	1    1800 4650
+	1    0    0    -1  
+$EndComp
+Text Label 9950 3000 0    50   ~ 0
+NeoPixel_Back
 $EndSCHEMATC

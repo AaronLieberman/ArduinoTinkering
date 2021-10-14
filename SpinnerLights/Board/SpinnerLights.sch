@@ -126,8 +126,6 @@ F 3 "~" H 9650 3000 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	9850 3000 10050 3000
-Wire Wire Line
 	10350 3000 10350 3350
 Wire Wire Line
 	10350 3350 8900 3350
@@ -201,27 +199,6 @@ Wire Wire Line
 	9200 3000 9450 3000
 Connection ~ 9200 2700
 Wire Wire Line
-	10050 1600 10050 2700
-Wire Wire Line
-	10650 1600 10650 2700
-$Comp
-L LED:NeoPixel_THT PIXEL3
-U 1 1 6175018F
-P 10350 2700
-F 0 "PIXEL3" V 10396 2356 50  0000 R CNN
-F 1 "NeoPixel_THT" V 10305 2356 50  0000 R CNN
-F 2 "LED_SMD:LED_SK6812MINI_PLCC4_3.5x3.5mm_P1.75mm" H 10400 2400 50  0001 L TNN
-F 3 "https://www.adafruit.com/product/1938" H 10450 2325 50  0001 L TNN
-	1    10350 2700
-	0    -1   -1   0   
-$EndComp
-Connection ~ 10650 2700
-Wire Wire Line
-	10650 2700 10650 3050
-Connection ~ 10050 2700
-Wire Wire Line
-	10050 2700 10050 3000
-Wire Wire Line
 	10350 2400 10350 1900
 $Comp
 L Device:D D1
@@ -266,14 +243,6 @@ F 3 "" H 8200 4850 50  0001 C CNN
 	1    8200 4850
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	5100 3100 5100 2950
-Wire Wire Line
-	5100 2950 8400 2950
-Wire Wire Line
-	8400 2950 8400 1150
-Wire Wire Line
-	8400 1150 8900 1150
 Wire Wire Line
 	1800 4550 1800 4650
 Wire Wire Line
@@ -412,4 +381,35 @@ F 3 "" H 1800 4650 50  0001 C CNN
 	1    1800 4650
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	5100 3100 5100 2950
+Wire Wire Line
+	5100 2950 8400 2950
+Wire Wire Line
+	8400 2950 8400 1150
+Wire Wire Line
+	8400 1150 8900 1150
+Wire Wire Line
+	10050 2700 10050 3000
+Wire Wire Line
+	10050 1600 10050 2700
+Connection ~ 10050 2700
+Wire Wire Line
+	10650 2700 10650 3050
+Wire Wire Line
+	10650 1600 10650 2700
+Connection ~ 10650 2700
+$Comp
+L LED:NeoPixel_THT PIXEL3
+U 1 1 6175018F
+P 10350 2700
+F 0 "PIXEL3" V 10396 2356 50  0000 R CNN
+F 1 "NeoPixel_THT" V 10305 2356 50  0000 R CNN
+F 2 "LED_SMD:LED_SK6812MINI_PLCC4_3.5x3.5mm_P1.75mm" H 10400 2400 50  0001 L TNN
+F 3 "https://www.adafruit.com/product/1938" H 10450 2325 50  0001 L TNN
+	1    10350 2700
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	10050 3000 9850 3000
 $EndSCHEMATC
