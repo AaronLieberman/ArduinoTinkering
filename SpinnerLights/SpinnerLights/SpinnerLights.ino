@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include <Adafruit_LIS3DH.h>
+#include <Adafruit_ADXL345_U.h>
 #include <Adafruit_NeoPixel.h>
 
 #include "Color3F.h"
@@ -11,26 +12,20 @@
 #include <string>
 #include <vector>
 
-//#define CIRCUITPLAYGROUND
-
-#ifdef CIRCUITPLAYGROUND
-const int kNeoPixelPin = 3;
-#else
 const int kNeoPixelPin = 1;
-#endif
-const int kLedPin = 13;
-const int kNumNeoPixels = 1;
+const int kNumNeoPixels = 4;
 
-Adafruit_NeoPixel _pixels(kNumNeoPixels, kNeoPixelPin, NEO_RGB + NEO_KHZ800);
-
-#ifdef CIRCUITPLAYGROUND
-Adafruit_NeoPixel _strip(5, 8, NEO_GRB + NEO_KHZ800); // 5 NeoPixels are on D8
-#endif
+Adafruit_NeoPixel _pixels(kNumNeoPixels, kNeoPixelPin, NEO_GRB + NEO_KHZ800);
 
 Adafruit_LIS3DH _accel;
+std::string failedToInitializeReason;
+
+#define WAIT_ON_SERIAL
 
 void setup() {
-	Serial.begin(115200);
+ 	Serial.begin(115200);
+
+	Serial.println("Opening serial");
 
 #ifdef WAIT_ON_SERIAL
 	while (!Serial) {
@@ -38,56 +33,64 @@ void setup() {
 	}
 #endif
 
-	_pixels.begin();
-#ifdef CIRCUITPLAYGROUND
-	_strip.begin();
-#endif
+	Serial.println("Serial opened");
 
-	if (!_accel.begin(0x18) && !_accel.begin(0x19)) {
-		Serial.print("Failed to find accelerometer");
-#ifdef CIRCUITPLAYGROUND
-		_strip.fill(0xff0000);
-		_strip.show();
-#endif
-		while (true) {
-		}
+	_pixels.begin();
+
+	if (!_accel.begin(0x53, 0x4a)) {
+		failedToInitializeReason = "Failed to find accelerometer";
+		return;
 	}
+
+	Serial.println("Connected to accelerometer");
 
 	_accel.setRange(LIS3DH_RANGE_2_G); // 2, 4, 8 or 16 G
 
 	_pixels.show();
-#ifdef CIRCUITPLAYGROUND
-	_strip.show();
-#endif
-
-	pinMode(kLedPin, OUTPUT);
 
 	delay(10);
 }
 
-uint8_t valueFromGravity(float v) {
-	v = abs(v);
-	v = v > 9.8 ? 9.8 : v;
-	v = v / 9.8;
-	return (uint8_t)(pow(v, 2) * 255);
+// uint8_t valueFromGravity(float v) {
+// 	v = abs(v);
+// 	v = v > 9.8 ? 9.8 : v;
+// 	v = v / 9.8;
+// 	return (uint8_t)(pow(v, 2) * 255);
+// }
+// _pixels.setPixelColor(0, valueFromGravity(event.acceleration.x) << 16);
+// _pixels.setPixelColor(1, valueFromGravity(event.acceleration.y) << 8);
+// _pixels.setPixelColor(2, valueFromGravity(event.acceleration.z));
+
+void failedToInitialize() {
+	Serial.println(failedToInitializeReason.c_str());
+
+	for (int i = 0; i < kNumNeoPixels; i++) {
+		_pixels.setPixelColor(i, 64, 0, 0);
+	}
+
+	_pixels.show();
+	
+	delay(1000);
 }
 
 void loop() {
+	if (!failedToInitializeReason.empty()) { failedToInitialize(); return; }
+
 	sensors_event_t event;
 	_accel.getEvent(&event);
 
-#if MODE == 1
-	_pixels.setPixelColor(0, valueFromGravity(event.acceleration.x) << 16);
-	_pixels.setPixelColor(1, valueFromGravity(event.acceleration.y) << 8);
-	_pixels.setPixelColor(2, valueFromGravity(event.acceleration.z));
-#else
-	float yAccel = event.acceleration.y;
-	uint8_t v = yAccel < -13 ? 255 : 0;
+	const float targetAccel = 100;
+	//float yAccel = event.acceleration.y;
+	float yAccel = 0;
+	uint8_t v = yAccel < targetAccel ? 255 : 0;
+
 	for (int i = 0; i < kNumNeoPixels; i++) {
-		_pixels.setPixelColor(i, v, v * 0.5f, 0);
+		_pixels.setPixelColor(i, v*0.5f, v * 0.25f, 0);
 	}
-#endif
 
 	_pixels.show();
-	delay(10);
+
+	serialPrintfln("%f, %f, %f", event.acceleration.x, event.acceleration.y, event.acceleration.z);
+	
+	delay(100);
 }
