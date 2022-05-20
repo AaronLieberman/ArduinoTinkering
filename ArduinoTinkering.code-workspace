@@ -107,7 +107,8 @@
 			"xmemory": "cpp",
 			"xstddef": "cpp",
 			"xtr1common": "cpp",
-			"string_view": "cpp"
+			"string_view": "cpp",
+			"*.tcc": "cpp"
 		}
 	}
 }

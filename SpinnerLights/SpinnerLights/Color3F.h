@@ -16,11 +16,41 @@ public:
 		B = b;
 	}
 
+	Color3F(float v) {
+		R = v;
+		G = v;
+		B = v;
+	}
+
 	Color3F operator*(float scalar) const {
 		Color3F result = *this;
 		result.R *= scalar;
 		result.G *= scalar;
 		result.B *= scalar;
+		return result;
+	}
+
+	Color3F operator/(float scalar) const {
+		Color3F result = *this;
+		result.R /= scalar;
+		result.G /= scalar;
+		result.B /= scalar;
+		return result;
+	}
+
+	Color3F operator+(Color3F other) const {
+		Color3F result = *this;
+		result.R += other.R;
+		result.G += other.G;
+		result.B += other.B;
+		return result;
+	}
+
+	Color3F operator-(Color3F other) const {
+		Color3F result = *this;
+		result.R -= other.R;
+		result.G -= other.G;
+		result.B -= other.B;
 		return result;
 	}
 
