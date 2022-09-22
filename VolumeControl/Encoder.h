@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stlhelper.h"
+#include "Debouncer.h"
 
 #include <functional>
 
@@ -8,7 +9,7 @@
 // function
 class Encoder {
 public:
-    Encoder(int encoderPinA, int encoderPinB);
+    Encoder(int encoderPinA, int encoderPinB, int encoderScale);
 
     void initialize();
     bool update();
@@ -22,11 +23,12 @@ public:
 private:
     const int _encoderPinA;
     const int _encoderPinB;
+    const int _encoderScale;
     std::function<void(int)> m_valueChanged;
-    bool _lastPinA = false;
-    unsigned int _lastPinAChange = 0;
-    bool _lastPinB = false;
-    unsigned int _lastPinBChange = 0;
+    Debouncer<bool> _valueA;
+    Debouncer<bool> _valueB;
+    bool _lastValueA = false;
+    bool _lastValueB = false;
     int _lastState = 0;
     int _encoderPos = 0;
     unsigned int _lastReportedPos = 0;

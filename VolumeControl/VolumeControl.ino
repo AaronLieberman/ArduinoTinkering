@@ -8,17 +8,21 @@
 
 #include <cmath>
 
-//#define TEST_SERIAL
+#define TEST_SERIAL
 
-const int kEncoderButtonPin = 4;
-const int kSwitchPin = 3;
+const int kEncoderButtonPin = 0;
+const int kPlaySwitchPin = 3;
+const int kPrevSwitchPin = 4;
+const int kNextSwitchPin = 5;
 const int kLedPin = LED_BUILTIN;
 
-const int kEncoderPinA = 0;
-const int kEncoderPinB = 1;
+const int kEncoderPinA = 1;
+const int kEncoderPinB = 2;
 
-Encoder _encoder(kEncoderPinA, kEncoderPinB);
-LatchButton _switch(kSwitchPin);
+Encoder _encoder(kEncoderPinA, kEncoderPinB, 2);
+LatchButton _playSwitch(kPlaySwitchPin);
+LatchButton _prevSwitch(kPrevSwitchPin);
+LatchButton _nextSwitch(kNextSwitchPin);
 LatchButton _encoderButton(kEncoderButtonPin);
 
 void valueChanged(int change) {
@@ -37,7 +41,9 @@ void setup() {
 
     pinMode(kLedPin, OUTPUT);
 
-    _switch.initialize();
+    _playSwitch.initialize();
+    _prevSwitch.initialize();
+    _nextSwitch.initialize();
     _encoderButton.initialize();
 
     _encoder.initialize();
@@ -47,13 +53,23 @@ void setup() {
 }
 
 void loop() {
-    bool anyPinDown = digitalRead(kSwitchPin) == LOW || digitalRead(kEncoderButtonPin) == LOW;
+    bool anyPinDown = digitalRead(kPlaySwitchPin) == LOW || digitalRead(kEncoderButtonPin) == LOW;
     digitalWrite(kLedPin, anyPinDown ? HIGH : LOW);
 
     _encoder.update();
 
-    if (_switch.getAndClearState()) {
+    if (_playSwitch.getAndClearState()) {
         Consumer.write(MEDIA_PLAY_PAUSE);
+        delay(200);
+    }
+    
+    if (_prevSwitch.getAndClearState()) {
+        Consumer.write(MEDIA_NEXT);
+        delay(200);
+    }
+
+    if (_nextSwitch.getAndClearState()) {
+        Consumer.write(MEDIA_PREV);
         delay(200);
     }
 
