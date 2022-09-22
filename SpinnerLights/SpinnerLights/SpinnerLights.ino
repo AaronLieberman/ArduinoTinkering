@@ -26,7 +26,7 @@ std::string _failedToInitializeReason;
 const float kMinAccel = 12;
 const float kMaxAccel = 40;
 
-const int kAttractStartMillis = 1000;
+const int kAttractStartMillis = 0;
 const int kAttractDurationMillis = 10000;
 std::chrono::system_clock::time_point _lastActive = std::chrono::system_clock::now() - std::chrono::milliseconds(kAttractStartMillis);
 
@@ -111,7 +111,7 @@ Color3F lerp(float v, Color3F a, Color3F b) {
 void showSpin(float x, float y, float z) {
 	float v = (clamp(-x, kMinAccel, kMaxAccel) - kMinAccel) / (kMaxAccel - kMinAccel);
 
-	Color3F outer = Color3F(1, 0.5, 0);
+	Color3F outer = Color3F(0.5, 1, 0);
 	Color3F inner = Color3F(0.5, 1, 0);
 
 	float flat = clamp(std::abs(z), 0, 9.8) / 9.8;
@@ -156,10 +156,6 @@ void loop() {
 
 	if (x < -kMinAccel) {
 		showSpin(x, y, z);
-		_lastActive = std::chrono::system_clock::now();
-	} else if (mag(x, y, z) > 11) {
-		_pixels.clear();
-		_pixels.show();
 		_lastActive = std::chrono::system_clock::now();
 	} else {
 		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
