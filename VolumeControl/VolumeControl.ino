@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-#define TEST_SERIAL
+//#define TEST_SERIAL
 
 const int kEncoderButtonPin = 0;
 const int kPlaySwitchPin = 3;
