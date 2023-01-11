@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 enum class InputPinMode {
     Input = INPUT,
     InputPullDown = INPUT_PULLDOWN,
@@ -16,5 +18,17 @@ public:
 private:
     int _buttonPin;
     InputPinMode _pinMode;
+    bool _buttonLatched = false;
+};
+
+class CustomLatchButton {
+public:
+    CustomLatchButton(std::function<bool()> testFunc);
+
+    void initialize();
+    bool getAndClearState();
+
+private:
+    std::function<bool()> _testFunc;
     bool _buttonLatched = false;
 };

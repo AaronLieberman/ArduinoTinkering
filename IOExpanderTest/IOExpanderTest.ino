@@ -14,9 +14,9 @@
 const int kLedPin = LED_BUILTIN;
 const int kSwitchPin = 0;
 
-LatchButton _switch(kSwitchPin);
-
 TCA9555 _ioPins(0x20);
+
+CustomLatchButton _switch([]() { return _ioPins.digitalRead(kSwitchPin) == LOW; });
 
 int _counter = 1;
 
@@ -46,6 +46,7 @@ void setup() {
 
     Serial.println("Starting IO expander");
     VERIFYIOCALL(_ioPins.begin());
+    VERIFYIOCALL(_ioPins.pinMode16(0x0001));
 
     Serial.println("Updating pins");
     updatePins();
