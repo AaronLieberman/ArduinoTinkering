@@ -59,24 +59,24 @@ void setup() {
 
     VERIFYIOCALL(_ioPins.begin_I2C(0x20));
 
-    // for (int i = 0; i < 8; i++)
-    // {
-    //     _ioPins.pinMode(i, OUTPUT);
-    // }
+    for (int i = 0; i < 8; i++)
+    {
+        _ioPins.pinMode(i, OUTPUT);
+    }
 
-    // for (int i = 8; i < 16; i++)
-    // {
-    //     _ioPins.pinMode(i, INPUT_PULLUP);
-    // }
+    for (int i = 8; i < 16; i++)
+    {
+        _ioPins.pinMode(i, INPUT_PULLUP);
+    }
     
-    // _ioPins.writeGPIOA(255);
+    _ioPins.writeGPIOA(255);
 
     Serial.println("Setup complete");
 }
 
 void loop() {
-//     uint8_t pinValues = _ioPins.readGPIOB();
-    uint8_t pinValues = 3;
+    uint8_t pinValues = _ioPins.readGPIOB();
+//    uint8_t pinValues = 3;
 
 #ifdef TEST_SERIAL
     serialPrintf("%d: ", pinValues);
@@ -92,8 +92,8 @@ void loop() {
     static bool x_ledPin = false;
     digitalWrite(kLedPin, x_ledPin = !x_ledPin);
 
-    //_ioPins.digitalWrite(3, x_ledPin); // Col3: S, W
-    //_ioPins.digitalWrite(4, !x_ledPin); // Col2: A
+    _ioPins.digitalWrite(3, x_ledPin); // Col3: S, W
+    _ioPins.digitalWrite(2, !x_ledPin); // Col2: A
     //_ioPins.digitalWrite(2, LOW); // Col2: A
     //_ioPins.digitalWrite(3, LOW); // Col3: S, W
 
