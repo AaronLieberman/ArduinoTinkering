@@ -59,3 +59,7 @@ void serialPrintfln(const char *format, ...) {
 
 	Serial.println();
 }
+
+void serialPrintfln() {
+	serialPrintfln("");
+}
