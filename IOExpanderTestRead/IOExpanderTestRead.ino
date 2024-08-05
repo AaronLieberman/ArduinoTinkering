@@ -18,10 +18,9 @@ Adafruit_MCP23X17 _ioPinsRight;
 
 const uint8_t kLeftCols = 7;
 const uint8_t kLeftRowOffset = 8;
-const uint8_t kLeftRows = 6;
 const uint8_t kRightCols = 9;
 const uint8_t kRightRowOffset = 9;
-const uint8_t kRightRows = 6;
+const uint8_t kRows = 6;
 
 bool _leftEnabled = false;
 bool _rightEnabled = false;
@@ -75,7 +74,7 @@ void setup() {
     for (int i = 0; i < kLeftCols; i++) {
         _ioPinsLeft.pinMode(i, INPUT_PULLUP);
     }
-    for (int i = kLeftRowOffset; i < kLeftRowOffset + kLeftRows; i++) {
+    for (int i = kLeftRowOffset; i < kLeftRowOffset + kRows; i++) {
         _ioPinsLeft.pinMode(i, OUTPUT);
     }
 
@@ -84,7 +83,7 @@ void setup() {
         _ioPinsRight.pinMode(i, INPUT_PULLUP);
     }
 
-    for (int i = kRightRowOffset; i < kRightRowOffset + kRightRows; i++) {
+    for (int i = kRightRowOffset; i < kRightRowOffset + kRows; i++) {
         _ioPinsRight.pinMode(i, OUTPUT);
     }
 
@@ -97,23 +96,32 @@ void setup() {
 }
 
 void loop() {
-    uint16_t pinValuesLeft = (_ioPinsLeft.readGPIOB() << 8) | _ioPinsLeft.readGPIOA();
-    uint16_t pinValuesRight = (_ioPinsRight.readGPIOB() << 8) | _ioPinsRight.readGPIOA();
+    for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
+        for (int rowBit = 0; rowBit < kRows; rowBit++) {
+            _ioPinsLeft.digitalWrite(kLeftRowOffset + rowBit, scanRowIndex != rowBit);
+            _ioPinsRight.digitalWrite(kRightRowOffset + rowBit, scanRowIndex != rowBit);
+        }
 
-    char buf1[16];
-    sprintf(buf1, "%02x", pinValuesLeft & 0x7f);
+        uint16_t pinValuesLeft = (_ioPinsLeft.readGPIOB() << 8) | _ioPinsLeft.readGPIOA();
+        uint16_t pinValuesRight = (_ioPinsRight.readGPIOB() << 8) | _ioPinsRight.readGPIOA();
 
-    serialPrintf("%s: ", buf1);
-    for (int i = 0; i < kLeftCols; i++) {
-        bool pinValue = ((pinValuesLeft >> i) & 1) > 0;
-        serialPrintf("%s", pinValue ? "-" : "x");
-    }
+        char buf1[16];
+        sprintf(buf1, "%02x", pinValuesLeft & 0x7f);
 
-    serialPrintf(" ");
+        serialPrintf("%s: ", buf1);
+        for (int i = 0; i < kLeftCols; i++) {
+            bool pinValue = ((pinValuesLeft >> i) & 1) > 0;
+            serialPrintf("%s", pinValue ? "-" : "x");
+        }
 
-    for (int i = 0; i < kRightCols; i++) {
-        bool pinValue = ((pinValuesRight >> i) & 1) > 0;
-        serialPrintf("%s", pinValue ? "-" : "x");
+        serialPrintf(" ");
+
+        for (int i = 0; i < kRightCols; i++) {
+            bool pinValue = ((pinValuesRight >> i) & 1) > 0;
+            serialPrintf("%s", pinValue ? "-" : "x");
+        }
+
+        serialPrintfln();
     }
 
     serialPrintfln();
@@ -121,8 +129,5 @@ void loop() {
     static bool x_ledPin = false;
     digitalWrite(kLedPin, x_ledPin = !x_ledPin);
 
-    _ioPinsLeft.digitalWrite(9, x_ledPin);  // Row1
-    _ioPinsLeft.digitalWrite(10, !x_ledPin);  // Row2
-
-    delay(500);
+    delay(10);
 }
