@@ -8,15 +8,22 @@
 
 #include <cmath>
 
-#define TEST_SERIAL
 #define WAIT_ON_SERIAL
 
 const int kLedPin = LED_BUILTIN;
 bool _initSuccess = true;
 
-Adafruit_MCP23X17 _ioPins;
+Adafruit_MCP23X17 _ioPinsLeft;
+//Adafruit_MCP23X17 _ioPinsRight;
 
-#ifdef TEST_SERIAL
+const uint8_t kLeftCols = 7;
+const uint8_t kLeftRowOffset = 8;
+const uint8_t kLeftRows = 6;
+// const uint8_t kRightCols = 9;
+// const uint8_t kRightRowOffset = 9;
+// const uint8_t kRightRows = 6;
+
+#pragma region VerifyIoCall
 bool VerifyIoCall(bool result, const char* func, int line) {
     if (!result) {
         serialPrintfln("IO failed at %s#%d", func, line);
@@ -28,23 +35,10 @@ bool VerifyIoCall(bool result, const char* func, int line) {
 }
 
 #define VERIFYIOCALL(result) VerifyIoCall(result, __func__, __LINE__)
-#else
-bool VerifyIoCall(bool result) {
-    if (!result) {
-        while (true) {
-            delay(500);
-        }
-    }
-    return result;
-}
-
-#define VERIFYIOCALL(result) VerifyIoCall(result)
-#endif
+#pragma endregion
 
 void setup() {
-#ifdef TEST_SERIAL
     Serial.begin(115200);
-#endif
 
 #ifdef WAIT_ON_SERIAL
     while (!Serial) delay(100);
@@ -59,40 +53,72 @@ void setup() {
     Serial.flush();
     delay(1000);
 
-    VERIFYIOCALL(_ioPins.begin_I2C(0x20));
+    VERIFYIOCALL(_ioPinsLeft.begin_I2C(0x20));
+    //VERIFYIOCALL(_ioPinsRight.begin_I2C(0x21));
 
-    for (int i = 0; i < 8; i++) {
-        _ioPins.pinMode(i, OUTPUT);
+    // initially clear all pins to output
+    for (int i = 0; i < 16; i++) {
+        _ioPinsLeft.pinMode(i, OUTPUT);
+        //_ioPinsRight.pinMode(i, OUTPUT);
     }
 
-    for (int i = 8; i < 16; i++) {
-        _ioPins.pinMode(i, INPUT_PULLUP);
+    // left side uses 7 cols, 5 rows
+    for (int i = 0; i < kLeftCols; i++) {
+        _ioPinsLeft.pinMode(i, INPUT_PULLUP);
+    }
+    for (int i = kLeftRowOffset; i < kLeftRowOffset + kLeftRows; i++) {
+        _ioPinsLeft.pinMode(i, OUTPUT);
     }
 
-    _ioPins.writeGPIOA(255);
+    // // right side uses 9 cols, 6 rows
+    // for (int i = 0; i < kRightCols; i++) {
+    //     _ioPinsRight.pinMode(i, INPUT_PULLUP);
+    // }
+
+    // for (int i = kRightRowOffset; i < kRightRowOffset + kRightRows; i++) {
+    //     _ioPinsRight.pinMode(i, OUTPUT);
+    // }
+
+    _ioPinsLeft.writeGPIOA(255);
+    _ioPinsLeft.writeGPIOB(255);
+    // _ioPinsRight.writeGPIOA(255);
+    // _ioPinsRight.writeGPIOB(255);
 
     Serial.println("Setup complete");
 }
 
 void loop() {
-    uint8_t pinValues = _ioPins.readGPIOB();
-    // uint8_t pinValues = 3;
+    uint16_t pinValuesLeft = (_ioPinsLeft.readGPIOB() << 8) | _ioPinsLeft.readGPIOA();
+    // uint16_t pinValuesRight = (_ioPinsRight.readGPIOB() << 8) | _ioPinsRight.readGPIOA();
 
-#ifdef TEST_SERIAL
-    serialPrintf("%d: ", pinValues);
-    for (int i = 7; i >= 0; i--) {
-        uint8_t pinValue = (pinValues >> i) & 1;
-        serialPrintf("%d ", pinValue);
+    char buf1[16];
+    sprintf(buf1, "%02x", pinValuesLeft & 0x7f);
+
+    serialPrintf("%s: ", buf1);
+    for (int i = 0; i < kLeftCols; i++) {
+        bool pinValue = ((pinValuesLeft >> i) & 1) > 0;
+        serialPrintf("%s", pinValue ? "-" : "x");
     }
 
+    // serialPrintf(" ");
+
+    // for (int i = 7; i >= 0; i--) {
+    //     uint8_t pinValue = (pinValuesRight >> i) & 1;
+    //     serialPrintf("%d ", pinValue);
+    // }
+
     serialPrintfln();
-#endif
 
     static bool x_ledPin = false;
     digitalWrite(kLedPin, x_ledPin = !x_ledPin);
 
-    _ioPins.digitalWrite(3, x_ledPin);  // Col3: S, W
-    _ioPins.digitalWrite(2, !x_ledPin);  // Col2: A
+    _ioPinsLeft.digitalWrite(9, x_ledPin);  // Row1
+    _ioPinsLeft.digitalWrite(10, !x_ledPin);  // Row2
+
+    // _ioPinsLeft.digitalWrite(3, x_ledPin);  // Col3: S, W
+    // _ioPinsRight.digitalWrite(3, x_ledPin);  // Col3: S, W
+    // _ioPinsLeft.digitalWrite(2, !x_ledPin);  // Col2: A
+    // _ioPinsRight.digitalWrite(2, !x_ledPin);  // Col2: A
     //_ioPins.digitalWrite(2, LOW);  // Col2: A
     //_ioPins.digitalWrite(3, LOW);  // Col3: S, W
 
