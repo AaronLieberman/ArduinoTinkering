@@ -1,7 +1,8 @@
 #pragma once
 
 #include "stlhelper.h"
-#include <Arduino.h>
+
+static uint GetTimeMs();
 
 template <typename T>
 class Debouncer {
@@ -11,7 +12,7 @@ public:
         , _current(initial) { }
 
     void setValue(T v, bool force = false) {
-        uint now = micros();
+        uint now = GetTimeMs();
         if (force || now - _lastChangedTime >= _debounceMicros) {
             _current = v;
             _lastChangedTime = now;

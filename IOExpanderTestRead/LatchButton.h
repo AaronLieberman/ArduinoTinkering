@@ -3,9 +3,9 @@
 #include <functional>
 
 enum class InputPinMode {
-    Input = INPUT,
-    InputPullDown = INPUT_PULLDOWN,
-    InputPullUp = INPUT_PULLUP,
+    Input,
+    InputPullDown,
+    InputPullUp,
 };
 
 class LatchButton {

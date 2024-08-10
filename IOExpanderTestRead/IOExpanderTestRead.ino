@@ -4,6 +4,8 @@
 #include "LatchButton.h"
 #include "SerialPrintf.h"
 
+#include <Arduino.h>
+
 #include <Adafruit_MCP23X17.h>
 
 #include <cmath>

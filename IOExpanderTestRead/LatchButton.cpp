@@ -2,6 +2,8 @@
 
 #include "LatchButton.h"
 
+#include <Arduino.h>
+
 // LatchButton
 
 LatchButton::LatchButton(int buttonPin, InputPinMode pinMode)
@@ -10,7 +12,15 @@ LatchButton::LatchButton(int buttonPin, InputPinMode pinMode)
 }
 
 void LatchButton::initialize() {
-    pinMode(_buttonPin, (uint32_t)_pinMode);
+    uint32_t pinModeValue = 0;
+    switch (_pinMode)
+    {
+        case InputPinMode::Input: pinModeValue = INPUT; break;
+        case InputPinMode::InputPullDown: pinModeValue = INPUT_PULLDOWN; break;
+        case InputPinMode::InputPullUp: pinModeValue = INPUT_PULLUP; break;
+    }
+
+    pinMode(_buttonPin, pinModeValue);
 }
 
 bool LatchButton::getAndClearState() {
