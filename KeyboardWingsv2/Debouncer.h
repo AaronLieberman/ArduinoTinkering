@@ -1,28 +1,16 @@
 #pragma once
 
-#include "stlhelper.h"
+#include <memory>
 
-static uint GetTimeMs();
-
-template <typename T>
 class Debouncer {
 public:
-    Debouncer(int debounceMicros, T initial)
-        : _debounceMicros(debounceMicros)
-        , _current(initial) { }
+    void setDebounceTime(int debounceMicros);
 
-    void setValue(T v, bool force = false) {
-        uint now = GetTimeMs();
-        if (force || now - _lastChangedTime >= _debounceMicros) {
-            _current = v;
-            _lastChangedTime = now;
-        }
-    }
-
-    T getValue() const { return _current; }
+    void setValue(bool v, bool force = false);
+    bool getValue() const { return _current; }
 
 private:
-    const int _debounceMicros;
-    T _current;
-    uint _lastChangedTime = 0;
+    int _debounceMicros = 2000;
+    bool _current;
+    long _lastChangedTime = 0;
 };

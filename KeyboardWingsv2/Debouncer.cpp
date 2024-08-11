@@ -2,7 +2,15 @@
 
 #include <Arduino.h>
 
-uint GetTimeMs()
+void Debouncer::setDebounceTime(int debounceMicros)
 {
-    return micros();
+    _debounceMicros = debounceMicros;
+}
+
+void Debouncer::setValue(bool v, bool force) {
+    long now = micros();
+    if (force || now - _lastChangedTime >= _debounceMicros) {
+        _current = v;
+        _lastChangedTime = now;
+    }
 }

@@ -3,29 +3,20 @@
 #include "Debouncer.h"
 #include "LatchButton.h"
 #include "SerialPrintf.h"
+#include "KeyScanner.h"
 
 #include <Arduino.h>
 
-#include <Adafruit_MCP23X17.h>
+// comment out the #pragma message in KeyboardLayouts in this library to reduce compile noise
+#include <HID-Project.h>
 
 #include <cmath>
 
 #define WAIT_ON_SERIAL
 
 const int kLedPin = LED_BUILTIN;
-bool _initSuccess = true;
 
-Adafruit_MCP23X17 _ioPinsLeft;
-Adafruit_MCP23X17 _ioPinsRight;
-
-const uint8_t kLeftCols = 7;
-const uint8_t kLeftRowOffset = 8;
-const uint8_t kRightCols = 9;
-const uint8_t kRightRowOffset = 9;
-const uint8_t kRows = 6;
-
-bool _leftEnabled = false;
-bool _rightEnabled = false;
+KeyScanner _keyScanner;
 
 #pragma region VerifyIoCall
 bool VerifyIoCall(bool result, const char* func, int line) {
@@ -53,83 +44,32 @@ void setup() {
     pinMode(kLedPin, OUTPUT);
     digitalWrite(kLedPin, HIGH);
 
+    Serial.println("Starting keyboard");
+    Serial.flush();
+    BootKeyboard.begin();
+
     Serial.println("Starting IO expander");
     Serial.flush();
-    delay(1000);
-
-    _leftEnabled = _ioPinsLeft.begin_I2C(0x20);
-    if (!_leftEnabled) {
-        Serial.println("Failed to connect to left side I2C");
-    }
-    _rightEnabled = _ioPinsRight.begin_I2C(0x21);
-    if (!_rightEnabled) {
-        Serial.println("Failed to connect to right side I2C");
-    }
-
-    // initially clear all pins to output
-    for (int i = 0; i < 16; i++) {
-        _ioPinsLeft.pinMode(i, OUTPUT);
-        _ioPinsRight.pinMode(i, OUTPUT);
-    }
-
-    // left side uses 7 cols, 5 rows
-    for (int i = 0; i < kLeftCols; i++) {
-        _ioPinsLeft.pinMode(i, INPUT_PULLUP);
-    }
-    for (int i = kLeftRowOffset; i < kLeftRowOffset + kRows; i++) {
-        _ioPinsLeft.pinMode(i, OUTPUT);
-    }
-
-    // right side uses 9 cols, 6 rows
-    for (int i = 0; i < kRightCols; i++) {
-        _ioPinsRight.pinMode(i, INPUT_PULLUP);
-    }
-
-    for (int i = kRightRowOffset; i < kRightRowOffset + kRows; i++) {
-        _ioPinsRight.pinMode(i, OUTPUT);
-    }
-
-    _ioPinsLeft.writeGPIOA(255);
-    _ioPinsLeft.writeGPIOB(255);
-    _ioPinsRight.writeGPIOA(255);
-    _ioPinsRight.writeGPIOB(255);
+    _keyScanner.Init();
 
     Serial.println("Setup complete");
+    Serial.flush();
 }
 
 void loop() {
-    for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
-        for (int rowBit = 0; rowBit < kRows; rowBit++) {
-            _ioPinsLeft.digitalWrite(kLeftRowOffset + rowBit, scanRowIndex != rowBit);
-            _ioPinsRight.digitalWrite(kRightRowOffset + rowBit, scanRowIndex != rowBit);
-        }
+    _keyScanner.Scan();
 
-        uint16_t pinValuesLeft = (_ioPinsLeft.readGPIOB() << 8) | _ioPinsLeft.readGPIOA();
-        uint16_t pinValuesRight = (_ioPinsRight.readGPIOB() << 8) | _ioPinsRight.readGPIOA();
+    std::vector<std::string> debugKeys = _keyScanner.GetDebugKeys();
 
-        char buf1[16];
-        sprintf(buf1, "%02x", pinValuesLeft & 0x7f);
-
-        serialPrintf("%s: ", buf1);
-        for (int i = 0; i < kLeftCols; i++) {
-            bool pinValue = ((pinValuesLeft >> i) & 1) > 0;
-            serialPrintf("%s", pinValue ? "-" : "x");
-        }
-
-        serialPrintf(" ");
-
-        for (int i = 0; i < kRightCols; i++) {
-            bool pinValue = ((pinValuesRight >> i) & 1) > 0;
-            serialPrintf("%s", pinValue ? "-" : "x");
-        }
-
-        serialPrintfln();
+    for (const std::string &row : debugKeys) {
+        Serial.println(row.c_str());
     }
 
     serialPrintfln();
+    Serial.flush();
 
     static bool x_ledPin = false;
     digitalWrite(kLedPin, x_ledPin = !x_ledPin);
 
-    delay(10);
+    delay(100);
 }
