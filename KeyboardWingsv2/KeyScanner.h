@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Debouncer.h"
+
 #include <string>
 #include <vector>
 
@@ -9,11 +11,12 @@ public:
 
     void Init();
 
-    void Scan();
+    bool Scan();
 
     std::vector<std::string> GetDebugKeys();
     const std::vector<uint32_t> &GetKeyPresses();
 
 private:
-    std::vector<std::vector<bool>> _rows;
+    std::vector<std::vector<Debouncer>> _rows;
+    uint32_t _lastHash = 0;
 };

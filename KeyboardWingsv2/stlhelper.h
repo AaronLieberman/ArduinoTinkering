@@ -10,7 +10,8 @@
 // }  // namespace std
 
 // #include <cstddef>
-// #include <memory>
+#include <vector>
+#include <memory>
 // #include <type_traits>
 // #include <utility>
 
@@ -44,3 +45,5 @@
 // template <class T, class... Args>
 // typename _Unique_if<T>::_Known_bound make_unique(Args&&...) = delete;
 // }  // namespace std
+
+std::string StringJoin(const std::vector<std::string> &elems, const std::string &separator = ", ");

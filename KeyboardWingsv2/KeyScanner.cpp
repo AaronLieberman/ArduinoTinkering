@@ -64,44 +64,52 @@ void KeyScanner::Init() {
     _ioPinsRight.writeGPIOB(255);
 }
 
-void KeyScanner::Scan() {
-    for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
-        for (int rowBit = 0; rowBit < kRows; rowBit++) {
-            _ioPinsLeft.digitalWrite(kLeftRowOffset + rowBit, scanRowIndex != rowBit);
-            _ioPinsRight.digitalWrite(kRightRowOffset + rowBit, scanRowIndex != rowBit);
-        }
+bool KeyScanner::Scan() {
+    uint32_t hash = 0;
+    uint32_t seed = 131;
 
-        uint16_t pinValuesLeft = (_ioPinsLeft.readGPIOB() << 8) | _ioPinsLeft.readGPIOA();
-        uint16_t pinValuesRight = (_ioPinsRight.readGPIOB() << 8) | _ioPinsRight.readGPIOA();
+    for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
+        _ioPinsLeft.writeGPIOAB(~(1 << (kLeftRowOffset + scanRowIndex)));
+        _ioPinsRight.writeGPIOAB(~(1 << (kRightRowOffset + scanRowIndex)));
+
+        uint16_t pinValuesLeft = _ioPinsLeft.readGPIOAB();
+        uint16_t pinValuesRight = _ioPinsRight.readGPIOAB();
 
         int colIndex = 0;
         for (int i = 0; i < kLeftCols; i++) {
             bool pinValue = ((pinValuesLeft >> i) & 1) > 0;
-            _rows[scanRowIndex][colIndex++] = pinValue;
+            bool debounced = _rows[scanRowIndex][colIndex++].setValue(pinValue, true);
+            hash = (hash * seed) + (debounced ? 1 : 0);
         }
 
         for (int i = 0; i < kRightCols; i++) {
             bool pinValue = ((pinValuesRight >> i) & 1) > 0;
-            _rows[scanRowIndex][colIndex++] = pinValue;
+            bool debounced = _rows[scanRowIndex][colIndex++].setValue(pinValue, true);
+            hash = (hash * seed) + (debounced ? 1 : 0);
         }
     }
+
+    bool changed = hash != _lastHash;
+    _lastHash = hash;
+    return changed;
 }
 
 std::vector<std::string> KeyScanner::GetDebugKeys() {
     std::vector<std::string> rows;
-    
+    rows.reserve(kRows);
+
     for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
         std::string cols;
         cols.reserve(kLeftCols + kRightCols + 10);
 
         for (int colIndex = 0; colIndex < kLeftCols; colIndex++) {
-            cols += _rows[scanRowIndex][colIndex] ? "-" : "x";
+            cols += _rows[scanRowIndex][colIndex].getValue() ? "-" : "x";
         }
 
         cols += " ";
 
         for (int colIndex = 0; colIndex < kRightCols; colIndex++) {
-            cols += _rows[scanRowIndex][kLeftCols + colIndex] ? "-" : "x";
+            cols += _rows[scanRowIndex][kLeftCols + colIndex].getValue() ? "-" : "x";
         }
 
         rows.push_back(std::move(cols));
@@ -111,6 +119,5 @@ std::vector<std::string> KeyScanner::GetDebugKeys() {
 }
 
 const std::vector<uint32_t> &KeyScanner::GetKeyPresses() {
-    
     return std::vector<uint32_t>();
 }

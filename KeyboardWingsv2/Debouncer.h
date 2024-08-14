@@ -4,13 +4,15 @@
 
 class Debouncer {
 public:
-    void setDebounceTime(int debounceMicros);
+    static void setDebounceTime(long debounceMs);
 
-    void setValue(bool v, bool force = false);
+    bool setValue(bool v, bool force = false);
     bool getValue() const { return _current; }
 
 private:
-    int _debounceMicros = 2000;
-    bool _current;
-    long _lastChangedTime = 0;
+    static long kDebounceMs;
+
+    long _requestTime = 0;
+    bool _current = false;
+    bool _request = false;
 };

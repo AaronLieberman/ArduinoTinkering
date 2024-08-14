@@ -1,9 +1,10 @@
 #include "stlhelper.h"
 
 #include "Debouncer.h"
+#include "KeyScanner.h"
 #include "LatchButton.h"
 #include "SerialPrintf.h"
-#include "KeyScanner.h"
+#include "SimpleTimer.h"
 
 #include <Arduino.h>
 
@@ -15,6 +16,10 @@
 #define WAIT_ON_SERIAL
 
 const int kLedPin = LED_BUILTIN;
+
+const int kInactiveScanDelayMs = 10;
+const long kInactiveDelayMs = 2000;
+const long kDebounceTimeMs = 0;
 
 KeyScanner _keyScanner;
 
@@ -54,22 +59,33 @@ void setup() {
 
     Serial.println("Setup complete");
     Serial.flush();
+
+    Debouncer::setDebounceTime(kDebounceTimeMs);
 }
 
 void loop() {
-    _keyScanner.Scan();
+    long now = millis();
 
-    std::vector<std::string> debugKeys = _keyScanner.GetDebugKeys();
+    bool changed = _keyScanner.Scan();
 
-    for (const std::string &row : debugKeys) {
-        Serial.println(row.c_str());
+    if (changed) {
+        for (const std::string& row : _keyScanner.GetDebugKeys()) {
+            Serial.println(row.c_str());
+        }
+
+        serialPrintfln();
+        Serial.flush();
     }
 
-    serialPrintfln();
-    Serial.flush();
+    static long x_activeTime = 0;
+    if (changed) {
+        x_activeTime = now;
+    }
 
-    static bool x_ledPin = false;
-    digitalWrite(kLedPin, x_ledPin = !x_ledPin);
+    bool active = now <= x_activeTime + kInactiveDelayMs;
+    digitalWrite(kLedPin, active ? LOW : HIGH);
 
-    delay(100);
+    if (!active) {
+        delay(kInactiveScanDelayMs);
+    }
 }
