@@ -22,6 +22,7 @@ const long kInactiveDelayMs = 2000;
 const long kDebounceTimeMs = 0;
 
 KeyScanner _keyScanner;
+long _lastActiveTime = 0;
 
 #pragma region VerifyIoCall
 bool VerifyIoCall(bool result, const char* func, int line) {
@@ -66,23 +67,42 @@ void setup() {
 void loop() {
     long now = millis();
 
-    bool changed = _keyScanner.Scan();
+    static std::vector<std::pair<int, int>> keysDown;
+    static std::vector<std::pair<int, int>> keysUp;
+    bool changed = _keyScanner.Scan(keysDown, keysUp);
 
     if (changed) {
-        for (const std::string& row : _keyScanner.GetDebugKeys()) {
+        _lastActiveTime = now;
+
+        static std::vector<std::string> debugKeys;
+        _keyScanner.GetDebugKeys(debugKeys);
+        for (const std::string& row : debugKeys) {
             Serial.println(row.c_str());
+        }
+
+        if (!keysDown.empty()) {
+            Serial.print("down: ");
+            for (auto [row, col] : keysDown) {
+                serialPrintf("%d,%d ", row, col);
+                BootKeyboard.press(KeyboardKeycode::KEY_L);
+            }
+            serialPrintfln();
+        }
+
+        if (!keysUp.empty()) {
+            Serial.print("up: ");
+            for (auto [row, col] : keysUp) {
+                serialPrintf("%d,%d ", row, col);
+                BootKeyboard.release(KeyboardKeycode::KEY_L);
+            }
+            serialPrintfln();
         }
 
         serialPrintfln();
         Serial.flush();
     }
 
-    static long x_activeTime = 0;
-    if (changed) {
-        x_activeTime = now;
-    }
-
-    bool active = now <= x_activeTime + kInactiveDelayMs;
+    bool active = now <= _lastActiveTime + kInactiveDelayMs;
     digitalWrite(kLedPin, active ? LOW : HIGH);
 
     if (!active) {

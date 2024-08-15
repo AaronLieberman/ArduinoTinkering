@@ -11,9 +11,9 @@ public:
 
     void Init();
 
-    bool Scan();
+    bool Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector<std::pair<int, int>> &outKeysUp);
 
-    std::vector<std::string> GetDebugKeys();
+    void GetDebugKeys(std::vector<std::string> &outRows);
     const std::vector<uint32_t> &GetKeyPresses();
 
 private:
