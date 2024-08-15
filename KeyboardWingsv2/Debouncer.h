@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 class Debouncer {
 public:
     static void setDebounceTime(long debounceMs);

@@ -81,7 +81,7 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
         for (auto [cols, pinValues] : std::vector<std::pair<uint8_t, uint16_t>>{ { kLeftCols, pinValuesLeft }, { kRightCols, pinValuesRight } } ) {
             for (int i = 0; i < cols; i++) {
                 bool pinValue = ((pinValues >> i) & 1) == 0;
-                Debouncer &key = _rows[scanRowIndex][colIndex++];
+                Debouncer &key = _rows[scanRowIndex][colIndex];
                 bool orig = key.getValue();
                 key.setValue(pinValue);
                 bool cur = key.getValue();
@@ -93,6 +93,7 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
                 } else if (changed && !cur) {
                     outKeysUp.push_back({ scanRowIndex, colIndex });
                 }
+                colIndex++;
             }
         }
     }

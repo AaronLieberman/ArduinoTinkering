@@ -2,6 +2,7 @@
 
 #include "Debouncer.h"
 #include "KeyScanner.h"
+#include "KeyboardLayout.h"
 #include "LatchButton.h"
 #include "SerialPrintf.h"
 #include "SimpleTimer.h"
@@ -16,6 +17,7 @@
 #define WAIT_ON_SERIAL
 
 const int kLedPin = LED_BUILTIN;
+const bool kPrintKeyDebug = false;
 
 const int kInactiveScanDelayMs = 10;
 const long kInactiveDelayMs = 2000;
@@ -23,6 +25,8 @@ const long kDebounceTimeMs = 0;
 
 KeyScanner _keyScanner;
 long _lastActiveTime = 0;
+
+KeyboardLayout _layout;
 
 #pragma region VerifyIoCall
 bool VerifyIoCall(bool result, const char* func, int line) {
@@ -80,22 +84,33 @@ void loop() {
             Serial.println(row.c_str());
         }
 
-        if (!keysDown.empty()) {
+        if (kPrintKeyDebug && !keysDown.empty()) {
             Serial.print("down: ");
-            for (auto [row, col] : keysDown) {
-                serialPrintf("%d,%d ", row, col);
-                BootKeyboard.press(KeyboardKeycode::KEY_L);
+        }
+
+        for (auto [row, col] : keysDown) {
+            LayoutKey key = _layout.getKey(row, col);
+            if (key.keyboardKeycode != KEY_RESERVED) {
+                BootKeyboard.press(key.keyboardKeycode);
+                if (kPrintKeyDebug) {
+                    serialPrintf("%d,%d: %d", row, col, key.keyboardKeycode);
+                }
+            } else if (key.consumerKeycode != 0) {
+                BootKeyboard.press(key.consumerKeycode);
             }
+        }
+
+        if (kPrintKeyDebug && !keysDown.empty()) {
             serialPrintfln();
         }
 
-        if (!keysUp.empty()) {
-            Serial.print("up: ");
-            for (auto [row, col] : keysUp) {
-                serialPrintf("%d,%d ", row, col);
-                BootKeyboard.release(KeyboardKeycode::KEY_L);
+        for (auto [row, col] : keysUp) {
+            LayoutKey key = _layout.getKey(row, col);
+            if (key.keyboardKeycode != KEY_RESERVED) {
+                BootKeyboard.release(key.keyboardKeycode);
+            } else if (key.consumerKeycode != 0) {
+                BootKeyboard.release(key.consumerKeycode);
             }
-            serialPrintfln();
         }
 
         serialPrintfln();
