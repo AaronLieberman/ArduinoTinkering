@@ -66,6 +66,8 @@ void setup() {
     Serial.flush();
 
     Debouncer::setDebounceTime(kDebounceTimeMs);
+
+    BootKeyboard.releaseAll();
 }
 
 void loop() {

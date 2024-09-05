@@ -37,31 +37,45 @@ void KeyScanner::Init() {
 
     // initially clear all pins to output
     for (int i = 0; i < 16; i++) {
-        _ioPinsLeft.pinMode(i, OUTPUT);
-        _ioPinsRight.pinMode(i, OUTPUT);
+        if (_leftEnabled) {
+            _ioPinsLeft.pinMode(i, OUTPUT);
+        }
+
+        if (_rightEnabled) {
+            _ioPinsRight.pinMode(i, OUTPUT);
+        }
     }
 
-    // left side uses 7 cols, 5 rows
-    for (int i = 0; i < kLeftCols; i++) {
-        _ioPinsLeft.pinMode(i, INPUT_PULLUP);
-    }
-    for (int i = kLeftRowOffset; i < kLeftRowOffset + kRows; i++) {
-        _ioPinsLeft.pinMode(i, OUTPUT);
-    }
-
-    // right side uses 9 cols, 6 rows
-    for (int i = 0; i < kRightCols; i++) {
-        _ioPinsRight.pinMode(i, INPUT_PULLUP);
+    if (_leftEnabled) {
+        // left side uses 7 cols, 5 rows
+        for (int i = 0; i < kLeftCols; i++) {
+            _ioPinsLeft.pinMode(i, INPUT_PULLUP);
+        }
+        for (int i = kLeftRowOffset; i < kLeftRowOffset + kRows; i++) {
+            _ioPinsLeft.pinMode(i, OUTPUT);
+        }
     }
 
-    for (int i = kRightRowOffset; i < kRightRowOffset + kRows; i++) {
-        _ioPinsRight.pinMode(i, OUTPUT);
+    if (_rightEnabled) {
+        // right side uses 9 cols, 6 rows
+        for (int i = 0; i < kRightCols; i++) {
+            _ioPinsRight.pinMode(i, INPUT_PULLUP);
+        }
+
+        for (int i = kRightRowOffset; i < kRightRowOffset + kRows; i++) {
+            _ioPinsRight.pinMode(i, OUTPUT);
+        }
     }
 
-    _ioPinsLeft.writeGPIOA(255);
-    _ioPinsLeft.writeGPIOB(255);
-    _ioPinsRight.writeGPIOA(255);
-    _ioPinsRight.writeGPIOB(255);
+    if (_leftEnabled) {
+        _ioPinsLeft.writeGPIOA(255);
+        _ioPinsLeft.writeGPIOB(255);
+    }
+
+    if (_rightEnabled) {
+        _ioPinsRight.writeGPIOA(255);
+        _ioPinsRight.writeGPIOB(255);
+    }
 }
 
 bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector<std::pair<int, int>> &outKeysUp) {
@@ -71,14 +85,19 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
     uint32_t seed = 131;
 
     for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
-        _ioPinsLeft.writeGPIOAB(~(1 << (kLeftRowOffset + scanRowIndex)));
-        _ioPinsRight.writeGPIOAB(~(1 << (kRightRowOffset + scanRowIndex)));
+        if (_leftEnabled) {
+            _ioPinsLeft.writeGPIOAB(~(1 << (kLeftRowOffset + scanRowIndex)));
+        }
+        if (_rightEnabled) {
+            _ioPinsRight.writeGPIOAB(~(1 << (kRightRowOffset + scanRowIndex)));
+        }
 
-        uint16_t pinValuesLeft = _ioPinsLeft.readGPIOAB();
-        uint16_t pinValuesRight = _ioPinsRight.readGPIOAB();
+        uint16_t pinValuesLeft = _leftEnabled ? _ioPinsLeft.readGPIOAB() : 0;
+        uint16_t pinValuesRight = _rightEnabled ? _ioPinsRight.readGPIOAB() : 0;
 
         int colIndex = 0;
-        for (auto [cols, pinValues] : std::vector<std::pair<uint8_t, uint16_t>>{ { kLeftCols, pinValuesLeft }, { kRightCols, pinValuesRight } } ) {
+        for (auto [cols, pinValues] :
+            std::vector<std::pair<uint8_t, uint16_t>>{{kLeftCols, pinValuesLeft}, {kRightCols, pinValuesRight}}) {
             for (int i = 0; i < cols; i++) {
                 bool pinValue = ((pinValues >> i) & 1) == 0;
                 Debouncer &key = _rows[scanRowIndex][colIndex];
@@ -89,9 +108,9 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
 
                 bool changed = orig != cur;
                 if (changed && cur) {
-                    outKeysDown.push_back({ scanRowIndex, colIndex });
+                    outKeysDown.push_back({scanRowIndex, colIndex});
                 } else if (changed && !cur) {
-                    outKeysUp.push_back({ scanRowIndex, colIndex });
+                    outKeysUp.push_back({scanRowIndex, colIndex});
                 }
                 colIndex++;
             }
