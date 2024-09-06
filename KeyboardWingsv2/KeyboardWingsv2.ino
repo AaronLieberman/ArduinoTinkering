@@ -18,6 +18,8 @@
 
 const int kLedPin = LED_BUILTIN;
 const bool kPrintKeyDebug = false;
+const bool kTestAllKeysMode = true;
+const bool kEnableKeys = false && !kTestAllKeysMode;
 
 const int kInactiveScanDelayMs = 10;
 const long kInactiveDelayMs = 2000;
@@ -56,7 +58,9 @@ void setup() {
 
     Serial.println("Starting keyboard");
     Serial.flush();
-    BootKeyboard.begin();
+    if (kEnableKeys) {
+        BootKeyboard.begin();
+    }
 
     Serial.println("Starting IO expander");
     Serial.flush();
@@ -67,7 +71,9 @@ void setup() {
 
     Debouncer::setDebounceTime(kDebounceTimeMs);
 
-    BootKeyboard.releaseAll();
+    if (kEnableKeys) {
+        BootKeyboard.releaseAll();
+    }
 }
 
 void loop() {
@@ -80,9 +86,9 @@ void loop() {
     if (changed) {
         _lastActiveTime = now;
 
-        static std::vector<std::string> debugKeys;
-        _keyScanner.GetDebugKeys(debugKeys);
-        for (const std::string& row : debugKeys) {
+        static std::vector<std::string> debugKeys, debugKeysSeen;
+        _keyScanner.GetDebugKeys(debugKeys, debugKeysSeen);
+        for (const std::string& row : (kTestAllKeysMode ? debugKeysSeen : debugKeys)) {
             Serial.println(row.c_str());
         }
 
@@ -93,12 +99,16 @@ void loop() {
         for (auto [row, col] : keysDown) {
             LayoutKey key = _layout.getKey(row, col);
             if (key.keyboardKeycode != KEY_RESERVED) {
-                BootKeyboard.press(key.keyboardKeycode);
+                if (kEnableKeys) {
+                    BootKeyboard.press(key.keyboardKeycode);
+                }
                 if (kPrintKeyDebug) {
                     serialPrintf("%d,%d: %d", row, col, key.keyboardKeycode);
                 }
             } else if (key.consumerKeycode != 0) {
-                BootKeyboard.press(key.consumerKeycode);
+                if (kEnableKeys) {
+                    BootKeyboard.press(key.consumerKeycode);
+                }
             }
         }
 
@@ -109,9 +119,13 @@ void loop() {
         for (auto [row, col] : keysUp) {
             LayoutKey key = _layout.getKey(row, col);
             if (key.keyboardKeycode != KEY_RESERVED) {
-                BootKeyboard.release(key.keyboardKeycode);
+                if (kEnableKeys) {
+                    BootKeyboard.release(key.keyboardKeycode);
+                }
             } else if (key.consumerKeycode != 0) {
-                BootKeyboard.release(key.consumerKeycode);
+                if (kEnableKeys) {
+                    BootKeyboard.release(key.consumerKeycode);
+                }
             }
         }
 

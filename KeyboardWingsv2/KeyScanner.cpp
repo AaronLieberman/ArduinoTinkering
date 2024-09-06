@@ -20,7 +20,11 @@ Adafruit_MCP23X17 _ioPinsRight;
 
 KeyScanner::KeyScanner() {
     _rows.resize(kRows);
+    _rowsSeen.resize(kRows);
     for (auto &colVec : _rows) {
+        colVec.resize(kLeftCols + kRightCols);
+    }
+    for (auto &colVec : _rowsSeen) {
         colVec.resize(kLeftCols + kRightCols);
     }
 }
@@ -92,8 +96,8 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
             _ioPinsRight.writeGPIOAB(~(1 << (kRightRowOffset + scanRowIndex)));
         }
 
-        uint16_t pinValuesLeft = _leftEnabled ? _ioPinsLeft.readGPIOAB() : 0;
-        uint16_t pinValuesRight = _rightEnabled ? _ioPinsRight.readGPIOAB() : 0;
+        uint16_t pinValuesLeft = _leftEnabled ? _ioPinsLeft.readGPIOAB() : 0xffff;
+        uint16_t pinValuesRight = _rightEnabled ? _ioPinsRight.readGPIOAB() : 0xffff;
 
         int colIndex = 0;
         for (auto [cols, pinValues] :
@@ -112,6 +116,11 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
                 } else if (changed && !cur) {
                     outKeysUp.push_back({scanRowIndex, colIndex});
                 }
+
+                if (cur) {
+                    _rowsSeen[scanRowIndex][colIndex] = true;
+                }
+
                 colIndex++;
             }
         }
@@ -122,25 +131,32 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
     return changed;
 }
 
-void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows) {
+void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std::string> &outRowsSeen) {
     outRows.clear();
     outRows.reserve(kRows);
+    outRowsSeen.clear();
+    outRowsSeen.reserve(kRows);
 
     for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
-        std::string cols;
+        std::string cols, colsSeen;
         cols.reserve(kLeftCols + kRightCols + 10);
+        colsSeen.reserve(kLeftCols + kRightCols + 10);
 
         for (int colIndex = 0; colIndex < kLeftCols; colIndex++) {
             cols += _rows[scanRowIndex][colIndex].getValue() ? "x" : "-";
+            colsSeen += _rowsSeen[scanRowIndex][colIndex] ? "x" : "-";
         }
 
         cols += " ";
+        colsSeen += " ";
 
         for (int colIndex = 0; colIndex < kRightCols; colIndex++) {
             cols += _rows[scanRowIndex][kLeftCols + colIndex].getValue() ? "x" : "-";
+            colsSeen += _rowsSeen[scanRowIndex][kLeftCols + colIndex] ? "x" : "-";
         }
 
         outRows.push_back(std::move(cols));
+        outRowsSeen.push_back(std::move(colsSeen));
     }
 }
 
