@@ -118,7 +118,7 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
                 }
 
                 if (cur) {
-                    _rowsSeen[scanRowIndex][colIndex] = true;
+                    _rowsSeen[scanRowIndex][colIndex]++;
                 }
 
                 colIndex++;
@@ -144,7 +144,7 @@ void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std
 
         for (int colIndex = 0; colIndex < kLeftCols; colIndex++) {
             cols += _rows[scanRowIndex][colIndex].getValue() ? "x" : "-";
-            colsSeen += _rowsSeen[scanRowIndex][colIndex] ? "x" : "-";
+            colsSeen += (_rowsSeen[scanRowIndex][colIndex] % 10) + '0';
         }
 
         cols += " ";
@@ -152,7 +152,7 @@ void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std
 
         for (int colIndex = 0; colIndex < kRightCols; colIndex++) {
             cols += _rows[scanRowIndex][kLeftCols + colIndex].getValue() ? "x" : "-";
-            colsSeen += _rowsSeen[scanRowIndex][kLeftCols + colIndex] ? "x" : "-";
+            colsSeen += (_rowsSeen[scanRowIndex][kLeftCols + colIndex] % 10) + '0';
         }
 
         outRows.push_back(std::move(cols));

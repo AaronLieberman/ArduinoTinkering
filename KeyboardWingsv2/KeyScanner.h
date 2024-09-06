@@ -19,5 +19,5 @@ public:
 private:
     std::vector<std::vector<Debouncer>> _rows;
     uint32_t _lastHash = 0;
-    std::vector<std::vector<bool>> _rowsSeen;
+    std::vector<std::vector<uint8_t>> _rowsSeen;
 };
