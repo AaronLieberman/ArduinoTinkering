@@ -25,7 +25,7 @@ KeyScanner::KeyScanner() {
         colVec.resize(kLeftCols + kRightCols);
     }
     for (auto &colVec : _rowsSeen) {
-        colVec.resize(kLeftCols + kRightCols);
+        colVec.resize(kLeftCols + kRightCols, 255);
     }
 }
 
@@ -118,7 +118,7 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
                 }
 
                 if (cur) {
-                    _rowsSeen[scanRowIndex][colIndex]++;
+                    _rowsSeen[scanRowIndex][colIndex] = (_rowsSeen[scanRowIndex][colIndex] + 1) % 10;
                 }
 
                 colIndex++;
@@ -144,7 +144,9 @@ void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std
 
         for (int colIndex = 0; colIndex < kLeftCols; colIndex++) {
             cols += _rows[scanRowIndex][colIndex].getValue() ? "x" : "-";
-            colsSeen += (_rowsSeen[scanRowIndex][colIndex] % 10) + '0';
+            colsSeen += _rowsSeen[scanRowIndex][colIndex] == 255
+                ? '-'
+                : ((_rowsSeen[scanRowIndex][kLeftCols + colIndex] % 10) + '0');
         }
 
         cols += " ";
@@ -152,14 +154,12 @@ void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std
 
         for (int colIndex = 0; colIndex < kRightCols; colIndex++) {
             cols += _rows[scanRowIndex][kLeftCols + colIndex].getValue() ? "x" : "-";
-            colsSeen += (_rowsSeen[scanRowIndex][kLeftCols + colIndex] % 10) + '0';
+            colsSeen += _rowsSeen[scanRowIndex][kLeftCols + colIndex] == 255
+                ? '-'
+                : ((_rowsSeen[scanRowIndex][kLeftCols + colIndex] % 10) + '0');
         }
 
         outRows.push_back(std::move(cols));
         outRowsSeen.push_back(std::move(colsSeen));
     }
-}
-
-const std::vector<uint32_t> &KeyScanner::GetKeyPresses() {
-    return std::vector<uint32_t>();
 }
