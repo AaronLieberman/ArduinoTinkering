@@ -20,15 +20,24 @@
 #define WAIT_ON_SERIAL
 const bool kUseSerial = true;
 
-const int kLedPin = LED_BUILTIN;
 const bool kTestAllKeysMode = true;
 const bool kEnableKeys = false && !kTestAllKeysMode;
 
-const int kInactiveScanDelayMs = 30;
+const int kLedPin = LED_BUILTIN;
+
+const int kActiveScanDelayMs = 300;//TODO reduce to 1
+const int kInactiveScanDelayMs = 300;//TODO reduce to 30
 const long kInactiveDelayMs = 2000;
 const long kDebounceTimeMs = 0;
 
-KeyScanner _keyScanner;
+const uint8_t kLeftCols = 7;
+const uint8_t kLeftRowOffset = 8;
+const uint8_t kRightCols = 9;
+const uint8_t kRightRowOffset = 9;
+const uint8_t kRows = 6;
+
+KeyScanner _keyScannerLeft(0x20, kLeftCols, kLeftRowOffset, kRows, 0);
+KeyScanner _keyScannerRight(0x21, kRightCols, kRightRowOffset, kRows, kLeftCols);
 long _lastActiveTime = 0;
 int _keyDownCount = 0;
 
@@ -70,9 +79,12 @@ void setup() {
         BootKeyboard.begin();
     }
 
-    Serial.println("Starting IO expander");
+    Serial.println("Starting IO left expander");
     Serial.flush();
-    _keyScanner.Init();
+    _keyScannerLeft.Init();
+    Serial.println("Starting IO right expander");
+    Serial.flush();
+    _keyScannerRight.Init();
 
     Serial.println("Setup complete");
     Serial.flush();
@@ -84,68 +96,77 @@ void setup() {
     }
 }
 
-void loop() {
-    long now = millis();
-
+bool Scan(KeyScanner keyScanner) {
+    // static just to avoid an extra allocation each loop. We clear at the start of keyscanner.Scan anyway
     static std::vector<std::pair<int, int>> keysDown;
     static std::vector<std::pair<int, int>> keysUp;
 
+    static SimpleTimer x_timerScan(100);
+    x_timerScan.Start();
+    bool changed = keyScanner.Scan(keysDown, keysUp);
+    x_timerScan.Stop();
+
+    if (changed) {
+        if (kUseSerial) {
+            static std::vector<std::string> debugKeys, debugKeysSeen;
+            keyScanner.GetDebugKeys(debugKeys, debugKeysSeen);
+            for (const std::string& row : (kTestAllKeysMode ? debugKeysSeen : debugKeys)) {
+                Serial.println(row.c_str());
+            }
+        }
+
+        for (auto [row, col] : keysDown) {
+            LayoutKey key = _layout.getKey(row, col);
+            if (key.keyboardKeycode != KEY_RESERVED) {
+                if (kEnableKeys) {
+                    BootKeyboard.press(key.keyboardKeycode);
+                }
+                _keyDownCount++;
+            } else if (key.consumerKeycode != 0) {
+                if (kEnableKeys) {
+                    BootKeyboard.press(key.consumerKeycode);
+                }
+                _keyDownCount++;
+            }
+        }
+
+        for (auto [row, col] : keysUp) {
+            LayoutKey key = _layout.getKey(row, col);
+            if (key.keyboardKeycode != KEY_RESERVED) {
+                if (kEnableKeys) {
+                    BootKeyboard.release(key.keyboardKeycode);
+                }
+                _keyDownCount--;
+            } else if (key.consumerKeycode != 0) {
+                if (kEnableKeys) {
+                    BootKeyboard.release(key.consumerKeycode);
+                }
+                _keyDownCount--;
+            }
+        }
+
+        if (kUseSerial) {
+            serialPrintfln();
+            Serial.flush();
+        }
+    }
+}
+
+void loop() {
+    long now = millis();
+
     static SimpleTimer x_timerFastScan(100);
     x_timerFastScan.Start();
-    KeyboardSide fastScanResult = _keyScanner.FastScan();
+    bool fastScanResultLeft = _keyScannerLeft.FastScan();
+    bool fastScanResultRight = _keyScannerRight.FastScan();
     x_timerFastScan.Stop();
 
-    if (fastScanResult != KeyboardSide::None) {
-        static SimpleTimer x_timerScan(100);
-        x_timerScan.Start();
-        bool changed = _keyScanner.Scan(keysDown, keysUp);
-        x_timerScan.Stop();
-
-        if (changed) {
+    if (fastScanResultLeft || fastScanResultRight) {
+        if (Scan(_keyScannerLeft)) {
             _lastActiveTime = now;
-
-            if (kUseSerial) {
-                static std::vector<std::string> debugKeys, debugKeysSeen;
-                _keyScanner.GetDebugKeys(debugKeys, debugKeysSeen);
-                for (const std::string& row : (kTestAllKeysMode ? debugKeysSeen : debugKeys)) {
-                    Serial.println(row.c_str());
-                }
-            }
-
-            for (auto [row, col] : keysDown) {
-                LayoutKey key = _layout.getKey(row, col);
-                if (key.keyboardKeycode != KEY_RESERVED) {
-                    if (kEnableKeys) {
-                        BootKeyboard.press(key.keyboardKeycode);
-                    }
-                    _keyDownCount++;
-                } else if (key.consumerKeycode != 0) {
-                    if (kEnableKeys) {
-                        BootKeyboard.press(key.consumerKeycode);
-                    }
-                    _keyDownCount++;
-                }
-            }
-
-            for (auto [row, col] : keysUp) {
-                LayoutKey key = _layout.getKey(row, col);
-                if (key.keyboardKeycode != KEY_RESERVED) {
-                    if (kEnableKeys) {
-                        BootKeyboard.release(key.keyboardKeycode);
-                    }
-                    _keyDownCount--;
-                } else if (key.consumerKeycode != 0) {
-                    if (kEnableKeys) {
-                        BootKeyboard.release(key.consumerKeycode);
-                    }
-                    _keyDownCount--;
-                }
-            }
-
-            if (kUseSerial) {
-                serialPrintfln();
-                Serial.flush();
-            }
+        }
+        if (Scan(_keyScannerRight)) {
+            _lastActiveTime = now;
         }
     } else if (_keyDownCount != 0) {
         BootKeyboard.releaseAll();
@@ -155,7 +176,5 @@ void loop() {
     bool active = now <= _lastActiveTime + kInactiveDelayMs;
     digitalWrite(kLedPin, active ? LOW : HIGH);
 
-    if (!active) {
-        delay(kInactiveScanDelayMs);
-    }
+    delay(active ? kActiveScanDelayMs : kInactiveScanDelayMs);
 }

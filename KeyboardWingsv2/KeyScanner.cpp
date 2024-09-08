@@ -1,88 +1,71 @@
 #include "KeyScanner.h"
-#include "SimpleTimer.h"
+#include "SerialPrintf.h"
 
 #include <Arduino.h>
 
 #include <Adafruit_MCP23X17.h>
 
-const uint8_t kLeftCols = 7;
-const uint8_t kLeftRowOffset = 8;
-const uint8_t kRightCols = 9;
-const uint8_t kRightRowOffset = 9;
-const uint8_t kRows = 6;
-
-bool _leftEnabled = false;
-bool _rightEnabled = false;
-
-Adafruit_MCP23X17 _ioPinsLeft;
-Adafruit_MCP23X17 _ioPinsRight;
+struct KeyScannerImpl {
+    bool enabled = false;
+    Adafruit_MCP23X17 ioPins;
+};
 
 // KeyScanner
 
-KeyScanner::KeyScanner() {
-    _rows.resize(kRows);
-    _rowsSeen.resize(kRows);
+KeyScanner::KeyScanner(uint8_t i2cAddr, uint8_t colCount, uint8_t rowOffset, uint8_t rowCount, uint8_t firstCol)
+    : _impl(new KeyScannerImpl())
+    , _i2cAddr(i2cAddr)
+    , _colCount(colCount)
+    , _rowOffset(rowOffset)
+    , _rowCount(rowCount)
+    , _firstCol(firstCol) {
+    _rows.resize(_rowCount);
+    _rowsSeen.resize(_rowCount);
     for (auto &colVec : _rows) {
-        colVec.resize(kLeftCols + kRightCols);
+        colVec.resize(_colCount);
     }
     for (auto &colVec : _rowsSeen) {
-        colVec.resize(kLeftCols + kRightCols, 255);
+        colVec.resize(_colCount, 255);
     }
+}
+
+KeyScanner::~KeyScanner()
+{
+    delete _impl;
 }
 
 void KeyScanner::Init() {
-    _leftEnabled = _ioPinsLeft.begin_I2C(0x20);
-    if (!_leftEnabled) {
-        Serial.println("Failed to connect to left side I2C");
+    Adafruit_MCP23X17 &ioPins = _impl->ioPins;
+
+    _impl->enabled = _impl->ioPins.begin_I2C(_i2cAddr);
+    if (!_impl->enabled) {
+        serialPrintfln("Failed to connect to I2C at addr %d", _i2cAddr);
     }
-    _rightEnabled = _ioPinsRight.begin_I2C(0x21);
-    if (!_rightEnabled) {
-        Serial.println("Failed to connect to right side I2C");
-    }
+
+
+//TODO use bulk pinmode set functions
+
 
     // initially clear all pins to output
     for (int i = 0; i < 16; i++) {
-        if (_leftEnabled) {
-            _ioPinsLeft.pinMode(i, OUTPUT);
-        }
-
-        if (_rightEnabled) {
-            _ioPinsRight.pinMode(i, OUTPUT);
-        }
+        ioPins.pinMode(i, OUTPUT);
     }
 
-    if (_leftEnabled) {
-        // left side uses 7 cols, 5 rows
-        for (int i = 0; i < kLeftCols; i++) {
-            _ioPinsLeft.pinMode(i, INPUT_PULLUP);
-        }
-        for (int i = kLeftRowOffset; i < kLeftRowOffset + kRows; i++) {
-            _ioPinsLeft.pinMode(i, OUTPUT);
-        }
+    for (int i = 0; i < _colCount; i++) {
+        ioPins.pinMode(i, INPUT_PULLUP);
+    }
+    for (int i = _rowOffset; i < _rowOffset + _rowCount; i++) {
+        ioPins.pinMode(i, OUTPUT);
     }
 
-    if (_rightEnabled) {
-        // right side uses 9 cols, 6 rows
-        for (int i = 0; i < kRightCols; i++) {
-            _ioPinsRight.pinMode(i, INPUT_PULLUP);
-        }
-
-        for (int i = kRightRowOffset; i < kRightRowOffset + kRows; i++) {
-            _ioPinsRight.pinMode(i, OUTPUT);
-        }
-    }
-
-    if (_leftEnabled) {
-        _ioPinsLeft.writeGPIOAB(0xffff);
-    }
-
-    if (_rightEnabled) {
-        _ioPinsRight.writeGPIOAB(0xffff);
-    }
+    ioPins.writeGPIOAB(0xffff);
 }
 
-bool KeyScanner::Scan(KeyboardSide sidesToScan, std::vector<std::pair<int, int>> &outKeysDown,
+bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown,
     std::vector<std::pair<int, int>> &outKeysUp) {
+    bool enabled = _impl->enabled;
+    Adafruit_MCP23X17 &ioPins = _impl->ioPins;
+
     outKeysDown.clear();
     outKeysUp.clear();
 
@@ -91,44 +74,34 @@ bool KeyScanner::Scan(KeyboardSide sidesToScan, std::vector<std::pair<int, int>>
     uint32_t hash = 0;
     uint32_t seed = 131;
 
-    for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
-        if (_leftEnabled) {
-            _ioPinsLeft.writeGPIOAB(~(1 << (kLeftRowOffset + scanRowIndex)));
+    for (int scanRowIndex = 0; scanRowIndex < _rowCount; scanRowIndex++) {
+        uint16_t pinValues = 0xffff;
+        if (enabled) {
+            ioPins.writeGPIOAB(~(1 << (_rowOffset + scanRowIndex)));
+            pinValues = ioPins.readGPIOAB();
         }
-        if (_rightEnabled) {
-            _ioPinsRight.writeGPIOAB(~(1 << (kRightRowOffset + scanRowIndex)));
-        }
+        serialPrintfln("%d", ~(1 << (_rowOffset + scanRowIndex)));
 
-        uint16_t pinValuesLeft = _leftEnabled ? _ioPinsLeft.readGPIOAB() : 0xffff;
-        uint16_t pinValuesRight = _rightEnabled ? _ioPinsRight.readGPIOAB() : 0xffff;
+        for (int colIndex = 0; colIndex < _colCount; colIndex++) {
+            bool pinValue = ((pinValues >> colIndex) & 1) == 0;
 
-        auto scanSide = [&](uint8_t cols, int colOffset, uint16_t pinValues) {
-            int colIndex = colOffset;
-            for (int i = 0; i < cols; i++) {
-                bool pinValue = ((pinValues >> i) & 1) == 0;
-                Debouncer &key = _rows[scanRowIndex][colIndex];
-                bool orig = key.getValue();
-                key.setValue(pinValue);
-                bool cur = key.getValue();
-                hash = (hash * seed) + (cur ? 1 : 0);
+            Debouncer &key = _rows[scanRowIndex][colIndex];
+            bool orig = key.getValue();
+            key.setValue(pinValue);
+            bool cur = key.getValue();
+            hash = (hash * seed) + (cur ? 1 : 0);
 
-                bool changed = orig != cur;
-                if (changed && cur) {
-                    outKeysDown.push_back({scanRowIndex, colIndex});
-                } else if (changed && !cur) {
-                    outKeysUp.push_back({scanRowIndex, colIndex});
-                }
-
-                if (cur) {
-                    _rowsSeen[scanRowIndex][colIndex] = (_rowsSeen[scanRowIndex][colIndex] + 1) % 10;
-                }
-
-                colIndex++;
+            bool changed = orig != cur;
+            if (changed && cur) {
+                outKeysDown.push_back({scanRowIndex, colIndex + _firstCol});
+            } else if (changed && !cur) {
+                outKeysUp.push_back({scanRowIndex, colIndex + _firstCol});
             }
-        };
 
-        scanSide(kLeftCols, 0, pinValuesLeft);
-        scanSide(kRightCols, kLeftCols, pinValuesRight);
+            if (cur) {
+                _rowsSeen[scanRowIndex][colIndex] = (_rowsSeen[scanRowIndex][colIndex] + 1) % 10;
+            }
+        }
     }
 
     bool changed = hash != _lastHash;
@@ -136,58 +109,39 @@ bool KeyScanner::Scan(KeyboardSide sidesToScan, std::vector<std::pair<int, int>>
     return changed;
 }
 
-KeyboardSide KeyScanner::FastScan() {
+bool KeyScanner::FastScan() {
+    Adafruit_MCP23X17 &ioPins = _impl->ioPins;
+
     if (!_lastWasFastscan) {
-        _ioPinsLeft.writeGPIOAB(0);
-        _ioPinsRight.writeGPIOAB(0);
+        ioPins.writeGPIOAB(0);
         _lastWasFastscan = true;
     }
 
-    uint16_t pinValuesLeft = _ioPinsLeft.readGPIOAB();
-    bool keyLeft = false;
-    for (int i = 0; i < kLeftCols; i++) {
-        if (((pinValuesLeft >> i) & 1) == 0) {
-            keyLeft = true;
+    uint16_t pinValues = ioPins.readGPIOAB();
+    for (int i = 0; i < _colCount; i++) {
+        if (((pinValues >> i) & 1) == 0) {
+            return true;
         }
     }
 
-    uint16_t pinValuesRight = _ioPinsRight.readGPIOAB();
-    bool keyRight = false;
-    for (int i = 0; i < kRightCols; i++) {
-        if (((pinValuesRight >> i) & 1) == 0) {
-            keyRight = true;
-        }
-    }
-
-    return (
-        KeyboardSide)((keyLeft ? (uint32_t)KeyboardSide::Left : 0) | (keyRight ? (uint32_t)KeyboardSide::Right : 0));
+    return false;
 }
 
 void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std::string> &outRowsSeen) {
     outRows.clear();
-    outRows.reserve(kRows);
+    outRows.reserve(_rowCount);
     outRowsSeen.clear();
-    outRowsSeen.reserve(kRows);
+    outRowsSeen.reserve(_rowCount);
 
-    auto accumulateRow = [](std::vector<Debouncer> &row, std::vector<uint8_t> &rowSeen, std::string &cols,
-                             std::string &colsSeen, int colCount, int colOffset) {
-        for (int colIndex = 0; colIndex < colCount; colIndex++) {
-            cols += row[colIndex + colOffset].getValue() ? "x" : "-";
-            colsSeen += rowSeen[colIndex + colOffset] == 255 ? '-' : ((rowSeen[colIndex + colOffset] % 10) + '0');
-        }
-    };
-
-    for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
+    for (int scanRowIndex = 0; scanRowIndex < _rowCount; scanRowIndex++) {
         std::string cols, colsSeen;
-        cols.reserve(kLeftCols + kRightCols + 10);
-        colsSeen.reserve(kLeftCols + kRightCols + 10);
+        cols.reserve(_colCount + 10);
+        colsSeen.reserve(_colCount + 10);
 
-        accumulateRow(_rows[scanRowIndex], _rowsSeen[scanRowIndex], cols, colsSeen, kLeftCols, 0);
-
-        cols += " ";
-        colsSeen += " ";
-
-        accumulateRow(_rows[scanRowIndex], _rowsSeen[scanRowIndex], cols, colsSeen, kRightCols, kLeftCols);
+        for (int colIndex = 0; colIndex < _colCount; colIndex++) {
+            cols += _rows[scanRowIndex][colIndex].getValue() ? "x" : "-";
+            colsSeen += _rowsSeen[scanRowIndex][colIndex] == 255 ? '-' : ((_rowsSeen[scanRowIndex][colIndex] % 10) + '0');
+        }
 
         outRows.push_back(std::move(cols));
         outRowsSeen.push_back(std::move(colsSeen));
