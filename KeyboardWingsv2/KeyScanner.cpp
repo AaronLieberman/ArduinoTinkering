@@ -137,27 +137,25 @@ void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std
     outRowsSeen.clear();
     outRowsSeen.reserve(kRows);
 
+    auto accumulateRow = [](std::vector<Debouncer> &row, std::vector<uint8_t> &rowSeen, std::string &cols,
+                             std::string &colsSeen, int colCount, int colOffset) {
+        for (int colIndex = 0; colIndex < colCount; colIndex++) {
+            cols += row[colIndex + colOffset].getValue() ? "x" : "-";
+            colsSeen += rowSeen[colIndex + colOffset] == 255 ? '-' : ((rowSeen[colIndex + colOffset] % 10) + '0');
+        }
+    };
+
     for (int scanRowIndex = 0; scanRowIndex < kRows; scanRowIndex++) {
         std::string cols, colsSeen;
         cols.reserve(kLeftCols + kRightCols + 10);
         colsSeen.reserve(kLeftCols + kRightCols + 10);
 
-        for (int colIndex = 0; colIndex < kLeftCols; colIndex++) {
-            cols += _rows[scanRowIndex][colIndex].getValue() ? "x" : "-";
-            colsSeen += _rowsSeen[scanRowIndex][colIndex] == 255
-                ? '-'
-                : ((_rowsSeen[scanRowIndex][kLeftCols + colIndex] % 10) + '0');
-        }
+        accumulateRow(_rows[scanRowIndex], _rowsSeen[scanRowIndex], cols, colsSeen, kLeftCols, 0);
 
         cols += " ";
         colsSeen += " ";
 
-        for (int colIndex = 0; colIndex < kRightCols; colIndex++) {
-            cols += _rows[scanRowIndex][kLeftCols + colIndex].getValue() ? "x" : "-";
-            colsSeen += _rowsSeen[scanRowIndex][kLeftCols + colIndex] == 255
-                ? '-'
-                : ((_rowsSeen[scanRowIndex][kLeftCols + colIndex] % 10) + '0');
-        }
+        accumulateRow(_rows[scanRowIndex], _rowsSeen[scanRowIndex], cols, colsSeen, kRightCols, kLeftCols);
 
         outRows.push_back(std::move(cols));
         outRowsSeen.push_back(std::move(colsSeen));
