@@ -7,6 +7,9 @@
 #include "SerialPrintf.h"
 #include "SimpleTimer.h"
 
+#include <Adafruit_BusIO_Register.h>
+#include <Adafruit_I2CDevice.h>
+#include <Adafruit_SPIDevice.h>
 #include <Arduino.h>
 
 // comment out the #pragma message in KeyboardLayouts in this library to reduce compile noise
@@ -15,18 +18,19 @@
 #include <cmath>
 
 #define WAIT_ON_SERIAL
+const bool kUseSerial = true;
 
 const int kLedPin = LED_BUILTIN;
-const bool kPrintKeyDebug = false;
 const bool kTestAllKeysMode = true;
 const bool kEnableKeys = false && !kTestAllKeysMode;
 
-const int kInactiveScanDelayMs = 10;
+const int kInactiveScanDelayMs = 30;
 const long kInactiveDelayMs = 2000;
 const long kDebounceTimeMs = 0;
 
 KeyScanner _keyScanner;
 long _lastActiveTime = 0;
+int _keyDownCount = 0;
 
 KeyboardLayout _layout;
 
@@ -52,6 +56,10 @@ void setup() {
 #endif
 
     Serial.println("Serial connected");
+
+    Serial.println("Starting I2C");
+    Wire.begin();
+    Wire.setClock(400000);  // upgrade the clock because the devices we're using can support it
 
     pinMode(kLedPin, OUTPUT);
     digitalWrite(kLedPin, HIGH);
@@ -81,56 +89,67 @@ void loop() {
 
     static std::vector<std::pair<int, int>> keysDown;
     static std::vector<std::pair<int, int>> keysUp;
-    bool changed = _keyScanner.Scan(keysDown, keysUp);
 
-    if (changed) {
-        _lastActiveTime = now;
+    static SimpleTimer x_timerFastScan(100);
+    x_timerFastScan.Start();
+    KeyboardSide fastScanResult = _keyScanner.FastScan();
+    x_timerFastScan.Stop();
 
-        static std::vector<std::string> debugKeys, debugKeysSeen;
-        _keyScanner.GetDebugKeys(debugKeys, debugKeysSeen);
-        for (const std::string& row : (kTestAllKeysMode ? debugKeysSeen : debugKeys)) {
-            Serial.println(row.c_str());
-        }
+    if (fastScanResult != KeyboardSide::None) {
+        static SimpleTimer x_timerScan(100);
+        x_timerScan.Start();
+        bool changed = _keyScanner.Scan(keysDown, keysUp);
+        x_timerScan.Stop();
 
-        if (kPrintKeyDebug && !keysDown.empty()) {
-            Serial.print("down: ");
-        }
+        if (changed) {
+            _lastActiveTime = now;
 
-        for (auto [row, col] : keysDown) {
-            LayoutKey key = _layout.getKey(row, col);
-            if (key.keyboardKeycode != KEY_RESERVED) {
-                if (kEnableKeys) {
-                    BootKeyboard.press(key.keyboardKeycode);
-                }
-                if (kPrintKeyDebug) {
-                    serialPrintf("%d,%d: %d", row, col, key.keyboardKeycode);
-                }
-            } else if (key.consumerKeycode != 0) {
-                if (kEnableKeys) {
-                    BootKeyboard.press(key.consumerKeycode);
+            if (kUseSerial) {
+                static std::vector<std::string> debugKeys, debugKeysSeen;
+                _keyScanner.GetDebugKeys(debugKeys, debugKeysSeen);
+                for (const std::string& row : (kTestAllKeysMode ? debugKeysSeen : debugKeys)) {
+                    Serial.println(row.c_str());
                 }
             }
-        }
 
-        if (kPrintKeyDebug && !keysDown.empty()) {
-            serialPrintfln();
-        }
-
-        for (auto [row, col] : keysUp) {
-            LayoutKey key = _layout.getKey(row, col);
-            if (key.keyboardKeycode != KEY_RESERVED) {
-                if (kEnableKeys) {
-                    BootKeyboard.release(key.keyboardKeycode);
-                }
-            } else if (key.consumerKeycode != 0) {
-                if (kEnableKeys) {
-                    BootKeyboard.release(key.consumerKeycode);
+            for (auto [row, col] : keysDown) {
+                LayoutKey key = _layout.getKey(row, col);
+                if (key.keyboardKeycode != KEY_RESERVED) {
+                    if (kEnableKeys) {
+                        BootKeyboard.press(key.keyboardKeycode);
+                    }
+                    _keyDownCount++;
+                } else if (key.consumerKeycode != 0) {
+                    if (kEnableKeys) {
+                        BootKeyboard.press(key.consumerKeycode);
+                    }
+                    _keyDownCount++;
                 }
             }
-        }
 
-        serialPrintfln();
-        Serial.flush();
+            for (auto [row, col] : keysUp) {
+                LayoutKey key = _layout.getKey(row, col);
+                if (key.keyboardKeycode != KEY_RESERVED) {
+                    if (kEnableKeys) {
+                        BootKeyboard.release(key.keyboardKeycode);
+                    }
+                    _keyDownCount--;
+                } else if (key.consumerKeycode != 0) {
+                    if (kEnableKeys) {
+                        BootKeyboard.release(key.consumerKeycode);
+                    }
+                    _keyDownCount--;
+                }
+            }
+
+            if (kUseSerial) {
+                serialPrintfln();
+                Serial.flush();
+            }
+        }
+    } else if (_keyDownCount != 0) {
+        BootKeyboard.releaseAll();
+        _keyDownCount = 0;
     }
 
     bool active = now <= _lastActiveTime + kInactiveDelayMs;

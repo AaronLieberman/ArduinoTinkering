@@ -1,4 +1,5 @@
 #include "KeyScanner.h"
+#include "SimpleTimer.h"
 
 #include <Arduino.h>
 
@@ -72,19 +73,21 @@ void KeyScanner::Init() {
     }
 
     if (_leftEnabled) {
-        _ioPinsLeft.writeGPIOA(255);
-        _ioPinsLeft.writeGPIOB(255);
+        _ioPinsLeft.writeGPIOAB(0xffff);
     }
 
     if (_rightEnabled) {
-        _ioPinsRight.writeGPIOA(255);
-        _ioPinsRight.writeGPIOB(255);
+        _ioPinsRight.writeGPIOAB(0xffff);
     }
 }
 
-bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector<std::pair<int, int>> &outKeysUp) {
+bool KeyScanner::Scan(KeyboardSide sidesToScan, std::vector<std::pair<int, int>> &outKeysDown,
+    std::vector<std::pair<int, int>> &outKeysUp) {
     outKeysDown.clear();
     outKeysUp.clear();
+
+    _lastWasFastscan = false;
+
     uint32_t hash = 0;
     uint32_t seed = 131;
 
@@ -99,9 +102,8 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
         uint16_t pinValuesLeft = _leftEnabled ? _ioPinsLeft.readGPIOAB() : 0xffff;
         uint16_t pinValuesRight = _rightEnabled ? _ioPinsRight.readGPIOAB() : 0xffff;
 
-        int colIndex = 0;
-        for (auto [cols, pinValues] :
-            std::vector<std::pair<uint8_t, uint16_t>>{{kLeftCols, pinValuesLeft}, {kRightCols, pinValuesRight}}) {
+        auto scanSide = [&](uint8_t cols, int colOffset, uint16_t pinValues) {
+            int colIndex = colOffset;
             for (int i = 0; i < cols; i++) {
                 bool pinValue = ((pinValues >> i) & 1) == 0;
                 Debouncer &key = _rows[scanRowIndex][colIndex];
@@ -123,12 +125,42 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
 
                 colIndex++;
             }
-        }
+        };
+
+        scanSide(kLeftCols, 0, pinValuesLeft);
+        scanSide(kRightCols, kLeftCols, pinValuesRight);
     }
 
     bool changed = hash != _lastHash;
     _lastHash = hash;
     return changed;
+}
+
+KeyboardSide KeyScanner::FastScan() {
+    if (!_lastWasFastscan) {
+        _ioPinsLeft.writeGPIOAB(0);
+        _ioPinsRight.writeGPIOAB(0);
+        _lastWasFastscan = true;
+    }
+
+    uint16_t pinValuesLeft = _ioPinsLeft.readGPIOAB();
+    bool keyLeft = false;
+    for (int i = 0; i < kLeftCols; i++) {
+        if (((pinValuesLeft >> i) & 1) == 0) {
+            keyLeft = true;
+        }
+    }
+
+    uint16_t pinValuesRight = _ioPinsRight.readGPIOAB();
+    bool keyRight = false;
+    for (int i = 0; i < kRightCols; i++) {
+        if (((pinValuesRight >> i) & 1) == 0) {
+            keyRight = true;
+        }
+    }
+
+    return (
+        KeyboardSide)((keyLeft ? (uint32_t)KeyboardSide::Left : 0) | (keyRight ? (uint32_t)KeyboardSide::Right : 0));
 }
 
 void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std::string> &outRowsSeen) {

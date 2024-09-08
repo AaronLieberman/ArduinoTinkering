@@ -4,13 +4,13 @@
 
 class SimpleTimer {
 public:
-    SimpleTimer(int maxCount);
+    SimpleTimer(int sampleCount);
 
     void Start();
     void Stop();
 
 private:
-    long _maxCount = 0;
+    long _sampleCount = 0;
     long _count = 0;
     long _startMicros = 0;
     uint64_t _sum = 0;
