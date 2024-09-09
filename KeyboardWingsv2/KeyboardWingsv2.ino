@@ -22,11 +22,12 @@ const bool kUseSerial = true;
 
 const bool kTestAllKeysMode = true;
 const bool kEnableKeys = false && !kTestAllKeysMode;
+const bool kTimersEnabled = false;
 
 const int kLedPin = LED_BUILTIN;
 
-const int kActiveScanDelayMs = 300;//TODO reduce to 1
-const int kInactiveScanDelayMs = 300;//TODO reduce to 30
+const int kActiveScanDelayMs = 1;  // TODO reduce to 1
+const int kInactiveScanDelayMs = 30;  // TODO reduce to 30
 const long kInactiveDelayMs = 2000;
 const long kDebounceTimeMs = 0;
 
@@ -96,12 +97,12 @@ void setup() {
     }
 }
 
-bool Scan(KeyScanner keyScanner) {
+bool Scan(KeyScanner &keyScanner) {
     // static just to avoid an extra allocation each loop. We clear at the start of keyscanner.Scan anyway
     static std::vector<std::pair<int, int>> keysDown;
     static std::vector<std::pair<int, int>> keysUp;
 
-    static SimpleTimer x_timerScan(100);
+    static SimpleTimer x_timerScan("Scan", 100, kTimersEnabled);
     x_timerScan.Start();
     bool changed = keyScanner.Scan(keysDown, keysUp);
     x_timerScan.Stop();
@@ -155,7 +156,7 @@ bool Scan(KeyScanner keyScanner) {
 void loop() {
     long now = millis();
 
-    static SimpleTimer x_timerFastScan(100);
+    static SimpleTimer x_timerFastScan("loop", 100, kTimersEnabled);
     x_timerFastScan.Start();
     bool fastScanResultLeft = _keyScannerLeft.FastScan();
     bool fastScanResultRight = _keyScannerRight.FastScan();
@@ -169,7 +170,9 @@ void loop() {
             _lastActiveTime = now;
         }
     } else if (_keyDownCount != 0) {
-        BootKeyboard.releaseAll();
+        if (kEnableKeys) {
+            BootKeyboard.releaseAll();
+        }
         _keyDownCount = 0;
     }
 

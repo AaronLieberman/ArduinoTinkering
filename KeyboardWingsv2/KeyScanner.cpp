@@ -29,22 +29,18 @@ KeyScanner::KeyScanner(uint8_t i2cAddr, uint8_t colCount, uint8_t rowOffset, uin
     }
 }
 
-KeyScanner::~KeyScanner()
-{
+KeyScanner::~KeyScanner() {
     delete _impl;
 }
 
 void KeyScanner::Init() {
     Adafruit_MCP23X17 &ioPins = _impl->ioPins;
 
-    _impl->enabled = _impl->ioPins.begin_I2C(_i2cAddr);
+    _impl->enabled = ioPins.begin_I2C(_i2cAddr);
     if (!_impl->enabled) {
         serialPrintfln("Failed to connect to I2C at addr %d", _i2cAddr);
+        return;
     }
-
-
-//TODO use bulk pinmode set functions
-
 
     // initially clear all pins to output
     for (int i = 0; i < 16; i++) {
@@ -61,9 +57,11 @@ void KeyScanner::Init() {
     ioPins.writeGPIOAB(0xffff);
 }
 
-bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown,
-    std::vector<std::pair<int, int>> &outKeysUp) {
-    bool enabled = _impl->enabled;
+bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector<std::pair<int, int>> &outKeysUp) {
+    if (!_impl->enabled) {
+        return false;
+    }
+
     Adafruit_MCP23X17 &ioPins = _impl->ioPins;
 
     outKeysDown.clear();
@@ -75,12 +73,8 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown,
     uint32_t seed = 131;
 
     for (int scanRowIndex = 0; scanRowIndex < _rowCount; scanRowIndex++) {
-        uint16_t pinValues = 0xffff;
-        if (enabled) {
-            ioPins.writeGPIOAB(~(1 << (_rowOffset + scanRowIndex)));
-            pinValues = ioPins.readGPIOAB();
-        }
-        serialPrintfln("%d", ~(1 << (_rowOffset + scanRowIndex)));
+        ioPins.writeGPIOAB(~(1 << (_rowOffset + scanRowIndex)));
+        uint16_t pinValues = ioPins.readGPIOAB();
 
         for (int colIndex = 0; colIndex < _colCount; colIndex++) {
             bool pinValue = ((pinValues >> colIndex) & 1) == 0;
@@ -110,6 +104,10 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown,
 }
 
 bool KeyScanner::FastScan() {
+    if (!_impl->enabled) {
+        return false;
+    }
+
     Adafruit_MCP23X17 &ioPins = _impl->ioPins;
 
     if (!_lastWasFastscan) {
@@ -140,7 +138,8 @@ void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std
 
         for (int colIndex = 0; colIndex < _colCount; colIndex++) {
             cols += _rows[scanRowIndex][colIndex].getValue() ? "x" : "-";
-            colsSeen += _rowsSeen[scanRowIndex][colIndex] == 255 ? '-' : ((_rowsSeen[scanRowIndex][colIndex] % 10) + '0');
+            colsSeen +=
+                _rowsSeen[scanRowIndex][colIndex] == 255 ? '-' : ((_rowsSeen[scanRowIndex][colIndex] % 10) + '0');
         }
 
         outRows.push_back(std::move(cols));

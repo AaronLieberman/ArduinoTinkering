@@ -7,10 +7,13 @@
 
 enum class KeyboardSide { None = 0, Left = 1, Right = 2, Both = Left | Right };
 
-class KeyScanner {
+class KeyScanner  {
 public:
     KeyScanner(uint8_t i2cAddr, uint8_t colCount, uint8_t rowOffset, uint8_t rowCount, uint8_t firstCol);
     ~KeyScanner();
+
+    KeyScanner(const KeyScanner&) = delete;
+    KeyScanner &operator=(const KeyScanner&) = delete;
 
     void Init();
 
