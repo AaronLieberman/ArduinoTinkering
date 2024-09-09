@@ -148,6 +148,8 @@ bool ProcessSide(KeyScanner& keyScanner) {
             }
         }
     }
+
+    return changed;
 }
 
 void loop() {
@@ -159,21 +161,25 @@ void loop() {
     bool fastScanResultRight = _keyScannerRight.FastScan();
     x_timerFastScan.Stop();
 
-    if (fastScanResultLeft || fastScanResultRight) {
+    if (fastScanResultLeft) {
         if (ProcessSide(_keyScannerLeft)) {
             _lastActiveTime = now;
         }
+    } else {
+        _keyScannerLeft.Clear();
+    }
+
+    if (fastScanResultRight) {
         if (ProcessSide(_keyScannerRight)) {
             _lastActiveTime = now;
         }
-
-        if (_lastActiveTime == now) {
-            PrintDebug();
-        }
-    } else if (_keyDownCount != 0) {
-        _keyScannerLeft.Clear();
+    } else {
         _keyScannerRight.Clear();
+    }
 
+    if (_lastActiveTime == now) {
+        PrintDebug();
+    } else if (!fastScanResultLeft && !fastScanResultRight && _keyDownCount != 0) {
         PrintDebug();
 
         if (kEnableKeys) {
