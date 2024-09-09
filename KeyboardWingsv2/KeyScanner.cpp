@@ -123,6 +123,17 @@ bool KeyScanner::FastScan() {
     return false;
 }
 
+void KeyScanner::Clear()
+{
+    for (int scanRowIndex = 0; scanRowIndex < _rowCount; scanRowIndex++) {
+        for (int colIndex = 0; colIndex < _colCount; colIndex++) {
+            _rows[scanRowIndex][colIndex] = false;
+        }
+    }
+
+    _lastHash = 0;
+}
+
 void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std::string> &outRowsSeen) {
     outRows.clear();
     outRows.reserve(_rowCount);

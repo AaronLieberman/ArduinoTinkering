@@ -17,6 +17,7 @@ public:
 
     bool FastScan();
     bool Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector<std::pair<int, int>> &outKeysUp);
+    void Clear();
 
     void GetDebugKeys(std::vector<std::string> &outRows, std::vector<std::string> &outRowsSeen);
 

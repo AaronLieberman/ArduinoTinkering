@@ -18,7 +18,7 @@
 #define WAIT_ON_SERIAL
 const bool kUseSerial = true;
 
-const bool kTestAllKeysMode = true;
+const bool kTestAllKeysMode = false;
 const bool kEnableKeys = false && !kTestAllKeysMode;
 const bool kTimersEnabled = false;
 
@@ -92,7 +92,22 @@ void setup() {
     }
 }
 
-bool Scan(KeyScanner &keyScanner) {
+void PrintDebug() {
+    if (kUseSerial) {
+        static std::vector<std::string> debugKeysLeft, debugKeysSeenLeft, debugKeysRight, debugKeysSeenRight;
+        _keyScannerLeft.GetDebugKeys(debugKeysLeft, debugKeysSeenLeft);
+        _keyScannerRight.GetDebugKeys(debugKeysRight, debugKeysSeenRight);
+        for (int rowIndex = 0; rowIndex < kRows; rowIndex++) {
+            serialPrintfln("%s %s", (kTestAllKeysMode ? debugKeysSeenLeft : debugKeysLeft)[rowIndex].c_str(),
+                (kTestAllKeysMode ? debugKeysSeenRight : debugKeysRight)[rowIndex].c_str());
+        }
+
+        serialPrintfln();
+        Serial.flush();
+    }
+}
+
+bool ProcessSide(KeyScanner& keyScanner) {
     // static just to avoid an extra allocation each loop. We clear at the start of keyscanner.Scan anyway
     static std::vector<std::pair<int, int>> keysDown;
     static std::vector<std::pair<int, int>> keysUp;
@@ -103,14 +118,6 @@ bool Scan(KeyScanner &keyScanner) {
     x_timerScan.Stop();
 
     if (changed) {
-        if (kUseSerial) {
-            static std::vector<std::string> debugKeys, debugKeysSeen;
-            keyScanner.GetDebugKeys(debugKeys, debugKeysSeen);
-            for (const std::string& row : (kTestAllKeysMode ? debugKeysSeen : debugKeys)) {
-                Serial.println(row.c_str());
-            }
-        }
-
         for (auto [row, col] : keysDown) {
             LayoutKey key = _layout.getKey(row, col);
             if (key.keyboardKeycode != KEY_RESERVED) {
@@ -140,11 +147,6 @@ bool Scan(KeyScanner &keyScanner) {
                 _keyDownCount--;
             }
         }
-
-        if (kUseSerial) {
-            serialPrintfln();
-            Serial.flush();
-        }
     }
 }
 
@@ -158,16 +160,26 @@ void loop() {
     x_timerFastScan.Stop();
 
     if (fastScanResultLeft || fastScanResultRight) {
-        if (Scan(_keyScannerLeft)) {
+        if (ProcessSide(_keyScannerLeft)) {
             _lastActiveTime = now;
         }
-        if (Scan(_keyScannerRight)) {
+        if (ProcessSide(_keyScannerRight)) {
             _lastActiveTime = now;
+        }
+
+        if (_lastActiveTime == now) {
+            PrintDebug();
         }
     } else if (_keyDownCount != 0) {
+        _keyScannerLeft.Clear();
+        _keyScannerRight.Clear();
+
+        PrintDebug();
+
         if (kEnableKeys) {
             BootKeyboard.releaseAll();
         }
+
         _keyDownCount = 0;
     }
 
