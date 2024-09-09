@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Debouncer.h"
-
 #include <string>
 #include <vector>
 
@@ -31,7 +29,7 @@ private:
     uint8_t _rowCount = 0;
     uint8_t _firstCol = 0;
 
-    std::vector<std::vector<Debouncer>> _rows;
+    std::vector<std::vector<bool>> _rows;
     uint32_t _lastHash = 0;
     bool _lastWasFastscan = false;
     std::vector<std::vector<uint8_t>> _rowsSeen;

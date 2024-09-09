@@ -1,9 +1,7 @@
 #include "stlhelper.h"
 
-#include "Debouncer.h"
 #include "KeyScanner.h"
 #include "KeyboardLayout.h"
-#include "LatchButton.h"
 #include "SerialPrintf.h"
 #include "SimpleTimer.h"
 
@@ -29,7 +27,6 @@ const int kLedPin = LED_BUILTIN;
 const int kActiveScanDelayMs = 1;  // TODO reduce to 1
 const int kInactiveScanDelayMs = 30;  // TODO reduce to 30
 const long kInactiveDelayMs = 2000;
-const long kDebounceTimeMs = 0;
 
 const uint8_t kLeftCols = 7;
 const uint8_t kLeftRowOffset = 8;
@@ -89,8 +86,6 @@ void setup() {
 
     Serial.println("Setup complete");
     Serial.flush();
-
-    Debouncer::setDebounceTime(kDebounceTimeMs);
 
     if (kEnableKeys) {
         BootKeyboard.releaseAll();

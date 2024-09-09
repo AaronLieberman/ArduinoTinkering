@@ -77,12 +77,10 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
         uint16_t pinValues = ioPins.readGPIOAB();
 
         for (int colIndex = 0; colIndex < _colCount; colIndex++) {
-            bool pinValue = ((pinValues >> colIndex) & 1) == 0;
+            bool cur = ((pinValues >> colIndex) & 1) == 0;
 
-            Debouncer &key = _rows[scanRowIndex][colIndex];
-            bool orig = key.getValue();
-            key.setValue(pinValue);
-            bool cur = key.getValue();
+            bool orig = _rows[scanRowIndex][colIndex];
+            _rows[scanRowIndex][colIndex] = cur;
             hash = (hash * seed) + (cur ? 1 : 0);
 
             bool changed = orig != cur;
@@ -137,7 +135,7 @@ void KeyScanner::GetDebugKeys(std::vector<std::string> &outRows, std::vector<std
         colsSeen.reserve(_colCount + 10);
 
         for (int colIndex = 0; colIndex < _colCount; colIndex++) {
-            cols += _rows[scanRowIndex][colIndex].getValue() ? "x" : "-";
+            cols += _rows[scanRowIndex][colIndex] ? "x" : "-";
             colsSeen +=
                 _rowsSeen[scanRowIndex][colIndex] == 255 ? '-' : ((_rowsSeen[scanRowIndex][colIndex] % 10) + '0');
         }
