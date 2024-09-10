@@ -93,25 +93,28 @@ void setup() {
 }
 
 void PrintDebug() {
-    if (kUseSerial) {
-        static std::vector<std::string> debugKeysLeft, debugKeysSeenLeft, debugKeysRight, debugKeysSeenRight;
-        _keyScannerLeft.GetDebugKeys(debugKeysLeft, debugKeysSeenLeft);
-        _keyScannerRight.GetDebugKeys(debugKeysRight, debugKeysSeenRight);
-        for (int rowIndex = 0; rowIndex < kRows; rowIndex++) {
-            serialPrintfln("%s %s", (kTestAllKeysMode ? debugKeysSeenLeft : debugKeysLeft)[rowIndex].c_str(),
-                (kTestAllKeysMode ? debugKeysSeenRight : debugKeysRight)[rowIndex].c_str());
-        }
-
-        serialPrintfln();
-        Serial.flush();
+    if (!kUseSerial) {
+        return;
     }
+
+    static std::vector<std::string> debugKeysLeft, debugKeysSeenLeft, debugKeysRight, debugKeysSeenRight;
+    _keyScannerLeft.GetDebugKeys(debugKeysLeft, debugKeysSeenLeft);
+    _keyScannerRight.GetDebugKeys(debugKeysRight, debugKeysSeenRight);
+    for (int rowIndex = 0; rowIndex < kRows; rowIndex++) {
+        serialPrintfln("%s %s", (kTestAllKeysMode ? debugKeysSeenLeft : debugKeysLeft)[rowIndex].c_str(),
+            (kTestAllKeysMode ? debugKeysSeenRight : debugKeysRight)[rowIndex].c_str());
+    }
+
+    serialPrintfln();
+    Serial.flush();
 }
 
-bool ProcessSide(KeyScanner& keyScanner) {
-    // static just to avoid an extra allocation each loop. We clear at the start of keyscanner.Scan anyway
-    static std::vector<std::pair<int, int>> keysDown;
-    static std::vector<std::pair<int, int>> keysUp;
+bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
+    if (!fastScanResult) {
+        return;
+    }
 
+    static std::vector<std::pair<int, int>> keysDown, keysUp;
     static SimpleTimer x_timerScan("Scan", 100, kTimersEnabled);
     x_timerScan.Start();
     bool changed = keyScanner.Scan(keysDown, keysUp);
@@ -161,25 +164,20 @@ void loop() {
     bool fastScanResultRight = _keyScannerRight.FastScan();
     x_timerFastScan.Stop();
 
-    if (fastScanResultLeft) {
-        if (ProcessSide(_keyScannerLeft)) {
-            _lastActiveTime = now;
-        }
-    } else {
-        _keyScannerLeft.Clear();
+    bool changed = false;
+    if (ProcessSide(_keyScannerLeft, fastScanResultLeft)) {
+        changed = true;
     }
 
-    if (fastScanResultRight) {
-        if (ProcessSide(_keyScannerRight)) {
-            _lastActiveTime = now;
-        }
-    } else {
-        _keyScannerRight.Clear();
+    if (ProcessSide(_keyScannerRight, fastScanResultRight)) {
+        changed = true;
     }
 
-    if (_lastActiveTime == now) {
+    if (changed) {
+        _lastActiveTime = now;
         PrintDebug();
     } else if (!fastScanResultLeft && !fastScanResultRight && _keyDownCount != 0) {
+        _lastActiveTime = now;
         PrintDebug();
 
         if (kEnableKeys) {
