@@ -111,7 +111,7 @@ void PrintDebug() {
 
 bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
     if (!fastScanResult) {
-        return;
+        return false;
     }
 
     static std::vector<std::pair<int, int>> keysDown, keysUp;
