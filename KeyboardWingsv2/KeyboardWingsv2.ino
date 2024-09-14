@@ -24,8 +24,8 @@ const bool kTimersEnabled = false;
 
 const int kLedPin = LED_BUILTIN;
 
-const int kActiveScanDelayMs = 1;  // TODO reduce to 1
-const int kInactiveScanDelayMs = 30;  // TODO reduce to 30
+const int kActiveScanDelayMs = 1;
+const int kInactiveScanDelayMs = 30;
 const long kInactiveDelayMs = 2000;
 
 const uint8_t kLeftCols = 7;
