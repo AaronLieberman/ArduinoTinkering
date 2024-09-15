@@ -1,7 +1,9 @@
 #include "stlhelper.h"
 
+#include "Encoder.h"
 #include "KeyScanner.h"
 #include "KeyboardLayout.h"
+#include "LatchButton.h"
 #include "SerialPrintf.h"
 #include "SimpleTimer.h"
 
@@ -41,6 +43,15 @@ int _keyDownCount = 0;
 
 KeyboardLayout _layout;
 
+const int kPlaySwitchPin = 3;
+const int kEncoderButtonPin = 0;
+const int kEncoderPinA = 1;
+const int kEncoderPinB = 2;
+
+Encoder _encoder(kEncoderPinA, kEncoderPinB, 2);
+LatchButton _playSwitch(kPlaySwitchPin);
+LatchButton _encoderButton(kEncoderButtonPin);
+
 #pragma region VerifyIoCall
 bool VerifyIoCall(bool result, const char* func, int line) {
     if (!result) {
@@ -55,12 +66,21 @@ bool VerifyIoCall(bool result, const char* func, int line) {
 #define VERIFYIOCALL(result) VerifyIoCall(result, __func__, __LINE__)
 #pragma endregion
 
+void VolumeValueChanged(int change) {
+    for (int i = 0; i < abs(change); i++) {
+        if (kUseSerial) {
+            Serial.println(change > 0 ? "Volume up" : "Volume down");
+        }
+        if (kEnableKeys) {
+            Consumer.write(change > 0 ? MEDIA_VOLUME_UP : MEDIA_VOLUME_DOWN);
+        }
+    }
+}
+
 void setup() {
     Serial.begin(115200);
 
-    if (kWaitOnSerial) {
-        while (!Serial) delay(100);
-    }
+    while (kWaitOnSerial && !Serial) delay(100);
 
     Serial.println("Serial connected");
 
@@ -75,6 +95,7 @@ void setup() {
     Serial.flush();
     if (kEnableKeys) {
         BootKeyboard.begin();
+        Consumer.begin();
     }
 
     Serial.println("Starting IO left expander");
@@ -83,6 +104,12 @@ void setup() {
     Serial.println("Starting IO right expander");
     Serial.flush();
     _keyScannerRight.Init();
+
+    _playSwitch.initialize();
+    _encoderButton.initialize();
+
+    _encoder.initialize();
+    _encoder.setValueChanged([](int change) { VolumeValueChanged(change); });
 
     Serial.println("Setup complete");
     Serial.flush();
@@ -181,6 +208,26 @@ void loop() {
         }
 
         _keyDownCount = 0;
+    }
+
+    _encoder.update();
+
+    if (_playSwitch.getAndClearState()) {
+        if (kUseSerial) {
+            Serial.println("Play/Pause");
+        }
+        if (kEnableKeys) {
+            Consumer.write(MEDIA_PLAY_PAUSE);
+        }
+    }
+
+    if (_encoderButton.getAndClearState()) {
+        if (kUseSerial) {
+            Serial.println("Mute");
+        }
+        if (kEnableKeys) {
+            Consumer.write(MEDIA_VOLUME_MUTE);
+        }
     }
 
     bool active = now <= _lastActiveTime + kInactiveDelayMs;
