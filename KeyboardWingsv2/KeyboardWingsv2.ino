@@ -15,11 +15,11 @@
 
 #include <cmath>
 
-#define WAIT_ON_SERIAL
+const bool kWaitOnSerial = false;
 const bool kUseSerial = true;
 
 const bool kTestAllKeysMode = false;
-const bool kEnableKeys = false && !kTestAllKeysMode;
+const bool kEnableKeys = true && !kTestAllKeysMode;
 const bool kTimersEnabled = false;
 
 const int kLedPin = LED_BUILTIN;
@@ -58,9 +58,9 @@ bool VerifyIoCall(bool result, const char* func, int line) {
 void setup() {
     Serial.begin(115200);
 
-#ifdef WAIT_ON_SERIAL
-    while (!Serial) delay(100);
-#endif
+    if (kWaitOnSerial) {
+        while (!Serial) delay(100);
+    }
 
     Serial.println("Serial connected");
 
@@ -110,14 +110,10 @@ void PrintDebug() {
 }
 
 bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
-    if (!fastScanResult) {
-        return false;
-    }
-
     static std::vector<std::pair<int, int>> keysDown, keysUp;
     static SimpleTimer x_timerScan("Scan", 100, kTimersEnabled);
     x_timerScan.Start();
-    bool changed = keyScanner.Scan(keysDown, keysUp);
+    bool changed = keyScanner.Scan(fastScanResult, keysDown, keysUp);
     x_timerScan.Stop();
 
     if (changed) {

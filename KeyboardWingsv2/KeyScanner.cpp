@@ -57,7 +57,8 @@ void KeyScanner::Init() {
     ioPins.writeGPIOAB(0xffff);
 }
 
-bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector<std::pair<int, int>> &outKeysUp) {
+bool KeyScanner::Scan(
+    bool fastScanResult, std::vector<std::pair<int, int>> &outKeysDown, std::vector<std::pair<int, int>> &outKeysUp) {
     if (!_impl->enabled) {
         return false;
     }
@@ -73,8 +74,14 @@ bool KeyScanner::Scan(std::vector<std::pair<int, int>> &outKeysDown, std::vector
     uint32_t seed = 131;
 
     for (int scanRowIndex = 0; scanRowIndex < _rowCount; scanRowIndex++) {
-        ioPins.writeGPIOAB(~(1 << (_rowOffset + scanRowIndex)));
-        uint16_t pinValues = ioPins.readGPIOAB();
+        uint16_t pinValues = 0xffff;
+
+        // if fastscan returned true then there's a key down and we want to find it. Otherwise, assume all keys are
+        // up (bits set)
+        if (fastScanResult) {
+            ioPins.writeGPIOAB(~(1 << (_rowOffset + scanRowIndex)));
+            pinValues = ioPins.readGPIOAB();
+        }
 
         for (int colIndex = 0; colIndex < _colCount; colIndex++) {
             bool cur = ((pinValues >> colIndex) & 1) == 0;
@@ -123,8 +130,7 @@ bool KeyScanner::FastScan() {
     return false;
 }
 
-void KeyScanner::Clear()
-{
+void KeyScanner::Clear() {
     for (int scanRowIndex = 0; scanRowIndex < _rowCount; scanRowIndex++) {
         for (int colIndex = 0; colIndex < _colCount; colIndex++) {
             _rows[scanRowIndex][colIndex] = false;
