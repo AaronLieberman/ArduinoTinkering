@@ -4,10 +4,11 @@
 
 #include <Arduino.h>
 
-SimpleTimer::SimpleTimer(const char *name, int sampleCount, bool enabled)
+bool SimpleTimer::_enabled = true;
+
+SimpleTimer::SimpleTimer(const char *name, int sampleCount)
     : _name(name)
-    , _sampleCount(sampleCount)
-    , _enabled(enabled) {
+    , _sampleCount(sampleCount) {
 }
 
 void SimpleTimer::Start() {

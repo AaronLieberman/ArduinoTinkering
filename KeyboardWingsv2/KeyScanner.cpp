@@ -1,5 +1,6 @@
 #include "KeyScanner.h"
 #include "SerialPrintf.h"
+#include "SimpleTimer.h"
 
 #include <Arduino.h>
 

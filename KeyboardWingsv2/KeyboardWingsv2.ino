@@ -28,7 +28,7 @@ const int kLedPin = LED_BUILTIN;
 
 const int kActiveScanDelayMs = 1;
 const int kInactiveScanDelayMs = 30;
-const long kInactiveDelayMs = 2000;
+const long kInactiveDelayMs = 4000;
 
 const uint8_t kLeftCols = 7;
 const uint8_t kLeftRowOffset = 8;
@@ -79,6 +79,8 @@ void VolumeValueChanged(int change) {
 
 void setup() {
     Serial.begin(115200);
+
+    SimpleTimer::SetEnabled(kTimersEnabled);
 
     while (kWaitOnSerial && !Serial) delay(100);
 
@@ -138,10 +140,7 @@ void PrintDebug() {
 
 bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
     static std::vector<std::pair<int, int>> keysDown, keysUp;
-    static SimpleTimer x_timerScan("Scan", 100, kTimersEnabled);
-    x_timerScan.Start();
     bool changed = keyScanner.Scan(fastScanResult, keysDown, keysUp);
-    x_timerScan.Stop();
 
     if (changed) {
         for (auto [row, col] : keysDown) {
@@ -181,12 +180,14 @@ bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
 void loop() {
     long now = millis();
 
-    static SimpleTimer x_timerFastScan("loop", 100, kTimersEnabled);
+    static SimpleTimer x_timerFastScan("fastscan", 100); // <2ms
     x_timerFastScan.Start();
     bool fastScanResultLeft = _keyScannerLeft.FastScan();
     bool fastScanResultRight = _keyScannerRight.FastScan();
     x_timerFastScan.Stop();
 
+    static SimpleTimer x_timerProcessSide("processSide", 100); // 5ms per side active
+    x_timerProcessSide.Start();
     bool changed = false;
     if (ProcessSide(_keyScannerLeft, fastScanResultLeft)) {
         changed = true;
@@ -195,12 +196,11 @@ void loop() {
     if (ProcessSide(_keyScannerRight, fastScanResultRight)) {
         changed = true;
     }
+    x_timerProcessSide.Stop();
 
     if (changed) {
-        _lastActiveTime = now;
         PrintDebug();
     } else if (!fastScanResultLeft && !fastScanResultRight && _keyDownCount != 0) {
-        _lastActiveTime = now;
         PrintDebug();
 
         if (kEnableKeys) {
@@ -230,8 +230,19 @@ void loop() {
         }
     }
 
+    if (fastScanResultLeft || fastScanResultRight) {
+        _lastActiveTime = now;
+    }
+
     bool active = now <= _lastActiveTime + kInactiveDelayMs;
     digitalWrite(kLedPin, active ? LOW : HIGH);
+
+    static bool lastActive = false;
+    if (lastActive != active)
+    {
+        Serial.println(active ? "active" : "inactive");
+        lastActive = active;
+    }
 
     delay(active ? kActiveScanDelayMs : kInactiveScanDelayMs);
 }
