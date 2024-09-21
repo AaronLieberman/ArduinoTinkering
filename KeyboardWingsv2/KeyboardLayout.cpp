@@ -13,7 +13,7 @@ const std::array<KeyboardKeycode, kRows * kCols> _layoutKeyboard = {
     NONE,           KEY_TAB,        KEY_Q,          KEY_W,          KEY_E,          KEY_R,          KEY_T,          KEY_Y,          KEY_U,          KEY_I,          KEY_O,          KEY_P,          KEY_LEFT_BRACE, KEY_RIGHT_BRACE,KEY_BACKSLASH,  KEY_HOME,
     NONE,           KEY_CAPS_LOCK,  KEY_A,          KEY_S,          KEY_D,          KEY_F,          KEY_G,          KEY_H,          KEY_J,          KEY_K,          KEY_L,          KEY_SEMICOLON,  KEY_QUOTE,      KEY_ENTER,      NONE,           KEY_END,
     NONE,           KEY_LEFT_SHIFT, KEY_Z,          KEY_X,          KEY_C,          KEY_V,          KEY_B,          KEY_N,          KEY_M,          KEY_COMMA,      KEY_PERIOD,     KEY_SLASH,      KEY_RIGHT_SHIFT,KEY_UP,         NONE,           KEY_PAGE_UP,
-    NONE,           NONE,           NONE,           KEY_LEFT_CTRL,  KEY_LEFT_GUI,   KEY_LEFT_ALT,   KEY_SPACE,      KEY_SPACE,      KEY_RIGHT_ALT,  KEY_RIGHT_GUI,  KEY_RIGHT_CTRL, KEY_LEFT,       KEY_DOWN,       KEY_RIGHT,      NONE,           KEY_PAGE_DOWN,
+    NONE,           NONE,           NONE,           KEY_LEFT_CTRL,  KEY_LEFT_GUI,   KEY_LEFT_ALT,   KEY_SPACE,      KEY_SPACE,      KEY_RIGHT_ALT,  KEY_APPLICATION, KEY_RIGHT_CTRL,KEY_LEFT,       KEY_DOWN,       KEY_RIGHT,      NONE,           KEY_PAGE_DOWN,
 };
 
 LayoutKey KeyboardLayout::getKey(int row, int col) {

@@ -1,6 +1,7 @@
 #include "stlhelper.h"
 
 #include "Encoder.h"
+#include "KeyActionTracker.h"
 #include "KeyScanner.h"
 #include "KeyboardLayout.h"
 #include "LatchButton.h"
@@ -42,6 +43,7 @@ long _lastActiveTime = 0;
 int _keyDownCount = 0;
 
 KeyboardLayout _layout;
+KeyActionTracker _keyActionTracker;
 
 const int kPlaySwitchPin = 3;
 const int kEncoderButtonPin = 0;
@@ -156,6 +158,19 @@ bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
                 }
                 _keyDownCount++;
             }
+
+            // handle special key combos
+            LayoutKey action = _keyActionTracker.KeyDown(key, 3);
+            if (_keyDownCount == 1) {
+                // press the application key 3 times quickly and you get a win+L
+                if (action.keyboardKeycode == KEY_APPLICATION) {
+                    if (kEnableKeys) {
+                        BootKeyboard.press(KEY_LEFT_GUI);
+                        BootKeyboard.write(KEY_L);
+                        BootKeyboard.release(KEY_LEFT_GUI);
+                    }
+                }
+            }
         }
 
         for (auto [row, col] : keysUp) {
@@ -180,13 +195,13 @@ bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
 void loop() {
     long now = millis();
 
-    static SimpleTimer x_timerFastScan("fastscan", 100); // <2ms
+    static SimpleTimer x_timerFastScan("fastscan", 100);  // <2ms
     x_timerFastScan.Start();
     bool fastScanResultLeft = _keyScannerLeft.FastScan();
     bool fastScanResultRight = _keyScannerRight.FastScan();
     x_timerFastScan.Stop();
 
-    static SimpleTimer x_timerProcessSide("processSide", 100); // 5ms per side active
+    static SimpleTimer x_timerProcessSide("processSide", 100);  // 5ms per side active
     x_timerProcessSide.Start();
     bool changed = false;
     if (ProcessSide(_keyScannerLeft, fastScanResultLeft)) {
@@ -238,8 +253,7 @@ void loop() {
     digitalWrite(kLedPin, active ? LOW : HIGH);
 
     static bool lastActive = false;
-    if (lastActive != active)
-    {
+    if (lastActive != active) {
         Serial.println(active ? "active" : "inactive");
         lastActive = active;
     }
