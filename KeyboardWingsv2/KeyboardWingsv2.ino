@@ -52,7 +52,7 @@ const int kEncoderButtonPin = 0;
 const int kEncoderPinA = 1;
 const int kEncoderPinB = 2;
 
-Encoder _encoder(kEncoderPinA, kEncoderPinB, 2);
+Encoder _encoder(kEncoderPinA, kEncoderPinB);
 LatchButton _playSwitch(kPlaySwitchPin);
 LatchButton _encoderButton(kEncoderButtonPin);
 

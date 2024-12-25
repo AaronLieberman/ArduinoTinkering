@@ -1,7 +1,7 @@
 #pragma once
 
-#include "stlhelper.h"
 #include "Debouncer.h"
+#include "stlhelper.h"
 
 #include <functional>
 
@@ -9,10 +9,13 @@
 // function
 class Encoder {
 public:
-    Encoder(int encoderPinA, int encoderPinB, int encoderScale);
+    Encoder(int encoderPinA, int encoderPinB);
+    ~Encoder();
 
     void initialize();
-    bool update();
+
+    // fires value changed callbacks
+    void update();
 
     // valueChanged is always raised from within the Encoder's update function
     void setValueChanged(std::function<void(int)> valueChanged) { m_valueChanged = std::move(valueChanged); }
@@ -21,15 +24,21 @@ public:
     void reset() { _encoderPos = 0; }
 
 private:
+    // called when any interrupt from any encoder occurs
+    static void handleInterrupt();
+
+    // encoders that need to be notified of interrupts
+    static std::vector<Encoder*> _encoders;
+
+    // called when an interrupt occurs
+    void handleInterruptInternal();
+
     const int _encoderPinA;
     const int _encoderPinB;
-    const int _encoderScale;
     std::function<void(int)> m_valueChanged;
     Debouncer<bool> _valueA;
     Debouncer<bool> _valueB;
-    bool _lastValueA = false;
-    bool _lastValueB = false;
-    int _lastState = 0;
+    uint8_t _lastState = 0;
     int _encoderPos = 0;
     unsigned int _lastReportedPos = 0;
 };

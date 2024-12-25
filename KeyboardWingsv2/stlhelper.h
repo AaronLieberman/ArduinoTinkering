@@ -2,7 +2,7 @@
 
 #undef min
 #undef max
-#undef abs
+//#undef abs
 
 // namespace std {
 // void __throw_bad_alloc();
