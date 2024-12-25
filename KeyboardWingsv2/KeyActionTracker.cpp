@@ -2,33 +2,57 @@
 
 #include <array>
 
-LayoutKey KeyActionTracker::KeyDown(LayoutKey key, int count) {
+void KeyActionTracker::KeyDown(LayoutKey key) {
     LayoutKey result = {};
     unsigned long now = millis();  // Get the current time in milliseconds
 
     // check if this key has been pressed before
     if (_keyData.count(key) == 0) {
         // first time press, initialize the data for this key
-        _keyData[key] = {now, 1};
+        _keyData[key] = {now, 1, true};
     } else {
-        auto& [start_time, press_count] = _keyData[key];
+        auto& [startTime, pressCount, currentlyDown] = _keyData[key];
+
+        currentlyDown = true;
 
         // calculate the time since the first press in the sequence
-        unsigned long duration = now - start_time;
+        unsigned long duration = now - startTime;
 
-        if (duration <= kSuccessionDuration) {
+        if (duration <= kRepeatWindowMs) {
             // within the time window, increment the count
-            press_count++;
-
-            if (press_count == count) {
-                result = key;
-                _keyData[key] = {now, 0};
-            }
+            pressCount++;
         } else {
             // outside the time window, reset the timer and count
-            _keyData[key] = {now, 1};
+            startTime = now;
+            pressCount = 1;
         }
     }
+}
 
-    return result;
+void KeyActionTracker::KeyUp(LayoutKey key) {
+    LayoutKey result = {};
+    unsigned long now = millis();  // Get the current time in milliseconds
+
+    // check if we're tracking this key
+    if (_keyData.count(key) == 0) {
+        // we didn't know about this key, clear it out
+        _keyData[key] = {now, 0, false};
+    } else {
+        auto& [startTime, pressCount, currentlyDown] = _keyData[key];
+
+        currentlyDown = false;
+    }
+}
+
+bool KeyActionTracker::GetKeyStatus(LayoutKey key, int count) {
+     if (_keyData.count(key) == 0)
+        return {};
+
+    auto& [_, pressCount, currentlyDown] = _keyData[key];
+
+    return currentlyDown && pressCount >= count;
+}
+
+void KeyActionTracker::Reset() {
+    _keyData.clear();
 }

@@ -42,6 +42,8 @@ KeyScanner _keyScannerRight(0x21, kRightCols, kRightRowOffset, kRows, kLeftCols)
 long _lastActiveTime = 0;
 int _keyDownCount = 0;
 
+bool _ctrlKeyDown = false;
+
 KeyboardLayout _layout;
 KeyActionTracker _keyActionTracker;
 
@@ -69,12 +71,21 @@ bool VerifyIoCall(bool result, const char* func, int line) {
 #pragma endregion
 
 void VolumeValueChanged(int change) {
-    for (int i = 0; i < abs(change); i++) {
+    if (_ctrlKeyDown) {
         if (kUseSerial) {
-            Serial.println(change > 0 ? "Volume up" : "Volume down");
+            Serial.println(change > 0 ? "Next track" : "Previous track");
         }
         if (kEnableKeys) {
-            Consumer.write(change > 0 ? MEDIA_VOLUME_UP : MEDIA_VOLUME_DOWN);
+            Consumer.write(change > 0 ? MEDIA_NEXT : MEDIA_PREV);
+        }
+    } else {
+        for (int i = 0; i < abs(change); i++) {
+            if (kUseSerial) {
+                Serial.println(change > 0 ? "Volume up" : "Volume down");
+            }
+            if (kEnableKeys) {
+                Consumer.write(change > 0 ? MEDIA_VOLUME_UP : MEDIA_VOLUME_DOWN);
+            }
         }
     }
 }
@@ -159,11 +170,12 @@ bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
                 _keyDownCount++;
             }
 
+            _keyActionTracker.KeyDown(key);
+
             // handle special key combos
-            LayoutKey action = _keyActionTracker.KeyDown(key, 3);
             if (_keyDownCount == 1) {
                 // press the application key 3 times quickly and you get a win+L
-                if (action.keyboardKeycode == KEY_APPLICATION) {
+                if (_keyActionTracker.GetKeyStatus({ KEY_APPLICATION }, 3)) {
                     if (kEnableKeys) {
                         BootKeyboard.press(KEY_LEFT_GUI);
                         BootKeyboard.write(KEY_L);
@@ -175,6 +187,9 @@ bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
 
         for (auto [row, col] : keysUp) {
             LayoutKey key = _layout.getKey(row, col);
+
+            _keyActionTracker.KeyUp(key);
+
             if (key.keyboardKeycode != KEY_RESERVED) {
                 if (kEnableKeys) {
                     BootKeyboard.release(key.keyboardKeycode);
@@ -187,6 +202,9 @@ bool ProcessSide(KeyScanner& keyScanner, bool fastScanResult) {
                 _keyDownCount--;
             }
         }
+
+        _ctrlKeyDown = _keyActionTracker.GetKeyStatus({ KEY_LEFT_CTRL }, 1) ||
+            _keyActionTracker.GetKeyStatus({ KEY_RIGHT_CTRL }, 1);
     }
 
     return changed;
@@ -217,6 +235,8 @@ void loop() {
         PrintDebug();
     } else if (!fastScanResultLeft && !fastScanResultRight && _keyDownCount != 0) {
         PrintDebug();
+
+        _keyActionTracker.Reset();
 
         if (kEnableKeys) {
             BootKeyboard.releaseAll();
